@@ -1,4 +1,4 @@
-# YoctoClaw FAQ
+# KrillClaw FAQ
 
 ### "Is this a toy?"
 
@@ -6,7 +6,7 @@ No. 39 unit tests, CI pipeline, streaming, context management, stuck-loop detect
 
 ### "You still need an LLM — so it's not really self-contained?"
 
-Correct. YoctoClaw is the harness, not the model. Same as Claude Code needing Claude, or Aider needing an API key. The difference is the harness is 180KB instead of 50MB.
+Correct. KrillClaw is the harness, not the model. Same as Claude Code needing Claude, or Aider needing an API key. The difference is the harness is 180KB instead of 50MB.
 
 ### "Why would I use this over Claude Code?"
 
@@ -26,7 +26,7 @@ They are. Marked as [Preview]. The coding profile is production-ready. IoT and R
 
 ### "Is Zig too niche?"
 
-Zig compiles to any target LLVM supports. The binary runs everywhere. You don't need to know Zig to use YoctoClaw.
+Zig compiles to any target LLVM supports. The binary runs everywhere. You don't need to know Zig to use KrillClaw.
 
 ### "No one needs embedded agents"
 

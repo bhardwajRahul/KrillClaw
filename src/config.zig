@@ -19,23 +19,23 @@ pub fn load(allocator: std.mem.Allocator) !types.Config {
         config.api_key = key;
         config.provider = .openai;
     }
-    if (getEnv(allocator, "YOCTOCLAW_MODEL")) |m| config.model = m;
-    if (getEnv(allocator, "YOCTOCLAW_PROVIDER")) |p| {
+    if (getEnv(allocator, "KRILLCLAW_MODEL")) |m| config.model = m;
+    if (getEnv(allocator, "KRILLCLAW_PROVIDER")) |p| {
         if (std.mem.eql(u8, p, "claude")) config.provider = .claude;
         if (std.mem.eql(u8, p, "openai")) config.provider = .openai;
         if (std.mem.eql(u8, p, "ollama")) config.provider = .ollama;
     }
-    if (getEnv(allocator, "YOCTOCLAW_MAX_TOKENS")) |mt| {
+    if (getEnv(allocator, "KRILLCLAW_MAX_TOKENS")) |mt| {
         config.max_tokens = std.fmt.parseInt(u32, mt, 10) catch config.max_tokens;
     }
-    if (getEnv(allocator, "YOCTOCLAW_BASE_URL")) |url| config.base_url = url;
-    if (getEnv(allocator, "YOCTOCLAW_SYSTEM_PROMPT")) |sp| config.system_prompt = sp;
-    if (getEnv(allocator, "YOCTOCLAW_TRANSPORT")) |t| {
+    if (getEnv(allocator, "KRILLCLAW_BASE_URL")) |url| config.base_url = url;
+    if (getEnv(allocator, "KRILLCLAW_SYSTEM_PROMPT")) |sp| config.system_prompt = sp;
+    if (getEnv(allocator, "KRILLCLAW_TRANSPORT")) |t| {
         if (std.mem.eql(u8, t, "ble")) config.transport = .ble;
         if (std.mem.eql(u8, t, "serial")) config.transport = .serial;
     }
-    if (getEnv(allocator, "YOCTOCLAW_SERIAL_PORT")) |sp| config.serial_port = sp;
-    if (getEnv(allocator, "YOCTOCLAW_BLE_DEVICE")) |bd| config.ble_device = bd;
+    if (getEnv(allocator, "KRILLCLAW_SERIAL_PORT")) |sp| config.serial_port = sp;
+    if (getEnv(allocator, "KRILLCLAW_BLE_DEVICE")) |bd| config.ble_device = bd;
 
     return config;
 }
@@ -51,7 +51,7 @@ pub fn applyCli(config: *types.Config, allocator: std.mem.Allocator) !?[]const u
     while (args.next()) |arg| {
         if (std.mem.eql(u8, arg, "--version") or std.mem.eql(u8, arg, "-v")) {
             const stdout = std.fs.File.stdout().deprecatedWriter();
-            try stdout.print("yoctoclaw 0.1.0\n", .{});
+            try stdout.print("krillclaw 0.1.0\n", .{});
             std.process.exit(0);
         } else if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
             printHelp();
@@ -100,9 +100,9 @@ pub fn applyCli(config: *types.Config, allocator: std.mem.Allocator) !?[]const u
 }
 
 fn loadConfigFile(allocator: std.mem.Allocator) ?types.Config {
-    // Try .yoctoclaw.json in current directory
+    // Try .krillclaw.json in current directory
     const paths = [_][]const u8{
-        ".yoctoclaw.json",
+        ".krillclaw.json",
     };
 
     for (paths) |path| {
@@ -151,12 +151,12 @@ pub fn printHelp() void {
     const stdout = std.fs.File.stdout().deprecatedWriter();
     stdout.print(
         \\
-        \\YoctoClaw — the world's smallest coding agent
+        \\KrillClaw — the world's smallest coding agent
         \\
         \\Usage:
-        \\  yoctoclaw                        Interactive REPL
-        \\  yoctoclaw "fix the bug"          One-shot mode
-        \\  yoctoclaw -p "add tests"         One-shot mode (explicit)
+        \\  krillclaw                        Interactive REPL
+        \\  krillclaw "fix the bug"          One-shot mode
+        \\  krillclaw -p "add tests"         One-shot mode (explicit)
         \\
         \\Options:
         \\  -m, --model MODEL       Model name (default: claude-sonnet-4-5-20250929)
@@ -173,12 +173,12 @@ pub fn printHelp() void {
         \\Environment:
         \\  ANTHROPIC_API_KEY       Claude API key
         \\  OPENAI_API_KEY          OpenAI API key (auto-selects openai provider)
-        \\  YOCTOCLAW_MODEL          Model override
-        \\  YOCTOCLAW_PROVIDER       Provider override
-        \\  YOCTOCLAW_BASE_URL       API base URL override
-        \\  YOCTOCLAW_SYSTEM_PROMPT  System prompt override
+        \\  KRILLCLAW_MODEL          Model override
+        \\  KRILLCLAW_PROVIDER       Provider override
+        \\  KRILLCLAW_BASE_URL       API base URL override
+        \\  KRILLCLAW_SYSTEM_PROMPT  System prompt override
         \\
-        \\Config file: .yoctoclaw.json (current dir)
+        \\Config file: .krillclaw.json (current dir)
         \\
     , .{}) catch {};
 }

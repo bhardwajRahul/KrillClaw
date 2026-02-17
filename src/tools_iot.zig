@@ -122,13 +122,13 @@ pub fn execute(allocator: std.mem.Allocator, tool: types.ToolUse) ToolResult {
     return .{ .output = "Unknown tool", .is_error = true };
 }
 
-/// KV Get — read file from .yoctoclaw/kv/<key>
+/// KV Get — read file from .krillclaw/kv/<key>
 fn executeKvGet(allocator: std.mem.Allocator, input: []const u8) ToolResult {
     const key = json.extractString(input, "key") orelse
         return .{ .output = "Missing 'key' parameter", .is_error = true };
     if (!isValidKvKey(key)) return .{ .output = "Invalid key (alphanumeric, dash, underscore, dot only)", .is_error = true };
 
-    const path = std.fmt.allocPrint(allocator, ".yoctoclaw/kv/{s}", .{key}) catch
+    const path = std.fmt.allocPrint(allocator, ".krillclaw/kv/{s}", .{key}) catch
         return .{ .output = "Path build error", .is_error = true };
     const file = std.fs.cwd().openFile(path, .{}) catch
         return .{ .output = "Key not found", .is_error = true };
@@ -140,7 +140,7 @@ fn executeKvGet(allocator: std.mem.Allocator, input: []const u8) ToolResult {
     return .{ .output = if (content.len == 0) "(empty)" else content, .is_error = false };
 }
 
-/// KV Set — write file to .yoctoclaw/kv/<key>
+/// KV Set — write file to .krillclaw/kv/<key>
 fn executeKvSet(allocator: std.mem.Allocator, input: []const u8) ToolResult {
     const key = json.extractString(input, "key") orelse
         return .{ .output = "Missing 'key' parameter", .is_error = true };
@@ -148,12 +148,12 @@ fn executeKvSet(allocator: std.mem.Allocator, input: []const u8) ToolResult {
         return .{ .output = "Missing 'value' parameter", .is_error = true };
     if (!isValidKvKey(key)) return .{ .output = "Invalid key (alphanumeric, dash, underscore, dot only)", .is_error = true };
 
-    std.fs.cwd().makePath(".yoctoclaw/kv") catch |err| {
+    std.fs.cwd().makePath(".krillclaw/kv") catch |err| {
         const msg = std.fmt.allocPrint(allocator, "Cannot create KV dir: {}", .{err}) catch "dir error";
         return .{ .output = msg, .is_error = true };
     };
 
-    const path = std.fmt.allocPrint(allocator, ".yoctoclaw/kv/{s}", .{key}) catch
+    const path = std.fmt.allocPrint(allocator, ".krillclaw/kv/{s}", .{key}) catch
         return .{ .output = "Path build error", .is_error = true };
     const file = std.fs.cwd().createFile(path, .{}) catch |err| {
         const msg = std.fmt.allocPrint(allocator, "Cannot create '{s}': {}", .{ path, err }) catch "create error";

@@ -4,7 +4,7 @@ const types = @import("types.zig");
 
 /// Abstract transport interface.
 ///
-/// YoctoClaw can run over different physical layers:
+/// KrillClaw can run over different physical layers:
 /// - HTTP (desktop: direct TLS to Claude API)
 /// - BLE  (embedded: GATT service, phone bridges to API)
 /// - Serial (dev boards: UART to host, host bridges to API)
@@ -48,7 +48,7 @@ pub const Transport = struct {
 // RPC Protocol for BLE/Serial transports
 // ============================================================
 //
-// When running on embedded hardware, YoctoClaw can't make HTTP
+// When running on embedded hardware, KrillClaw can't make HTTP
 // requests or execute bash commands directly. Instead, it sends
 // JSON-line messages over the transport to a host that does it.
 //

@@ -6,7 +6,7 @@ const std = @import("std");
 /// This allocator uses a statically-sized buffer and supports
 /// reset between agent turns (no per-allocation free).
 ///
-/// Memory layout for a typical embedded YoctoClaw:
+/// Memory layout for a typical embedded KrillClaw:
 ///   Total: 32KB arena
 ///   - Message buffer:    ~8KB (conversation history)
 ///   - JSON parse buffer: ~8KB (API response parsing)

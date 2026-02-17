@@ -60,7 +60,7 @@ test "bash exit code" {
 test "read_file" {
     if (build_options.profile != .coding) return;
     const alloc = std.heap.page_allocator;
-    const tmp_path = "/tmp/yoctoclaw_test_read.txt";
+    const tmp_path = "/tmp/krillclaw_test_read.txt";
     {
         const f = try std.fs.cwd().createFile(tmp_path, .{});
         defer f.close();
@@ -77,7 +77,7 @@ test "read_file" {
 test "write_file" {
     if (build_options.profile != .coding) return;
     const alloc = std.heap.page_allocator;
-    const tmp_path = "/tmp/yoctoclaw_test_write.txt";
+    const tmp_path = "/tmp/krillclaw_test_write.txt";
     defer std.fs.cwd().deleteFile(tmp_path) catch {};
     const input = std.fmt.allocPrint(alloc, "{{\"path\":\"{s}\",\"content\":\"written data\"}}", .{tmp_path}) catch unreachable;
     defer alloc.free(input);
@@ -93,7 +93,7 @@ test "write_file" {
 test "edit_file unique match" {
     if (build_options.profile != .coding) return;
     const alloc = std.heap.page_allocator;
-    const tmp_path = "/tmp/yoctoclaw_test_edit.txt";
+    const tmp_path = "/tmp/krillclaw_test_edit.txt";
     {
         const f = try std.fs.cwd().createFile(tmp_path, .{});
         defer f.close();
@@ -114,7 +114,7 @@ test "edit_file unique match" {
 test "edit_file no match" {
     if (build_options.profile != .coding) return;
     const alloc = std.heap.page_allocator;
-    const tmp_path = "/tmp/yoctoclaw_test_edit_nomatch.txt";
+    const tmp_path = "/tmp/krillclaw_test_edit_nomatch.txt";
     {
         const f = try std.fs.cwd().createFile(tmp_path, .{});
         defer f.close();
@@ -131,7 +131,7 @@ test "edit_file no match" {
 test "edit_file multiple matches" {
     if (build_options.profile != .coding) return;
     const alloc = std.heap.page_allocator;
-    const tmp_path = "/tmp/yoctoclaw_test_edit_multi.txt";
+    const tmp_path = "/tmp/krillclaw_test_edit_multi.txt";
     {
         const f = try std.fs.cwd().createFile(tmp_path, .{});
         defer f.close();

@@ -1,7 +1,7 @@
 const std = @import("std");
 const transport = @import("transport.zig");
 
-/// BLE GATT Transport for YoctoClaw.
+/// BLE GATT Transport for KrillClaw.
 ///
 /// Protocol:
 ///   Service UUID:        0xPC01 (custom)

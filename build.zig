@@ -28,7 +28,7 @@ pub fn build(b: *std.Build) void {
     mod.addOptions("build_options", options);
 
     const exe = b.addExecutable(.{
-        .name = "yoctoclaw",
+        .name = "krillclaw",
         .root_module = mod,
     });
 
@@ -44,7 +44,7 @@ pub fn build(b: *std.Build) void {
     if (b.args) |args| {
         run_cmd.addArgs(args);
     }
-    const run_step = b.step("run", "Run YoctoClaw");
+    const run_step = b.step("run", "Run KrillClaw");
     run_step.dependOn(&run_cmd.step);
 
     // Test step

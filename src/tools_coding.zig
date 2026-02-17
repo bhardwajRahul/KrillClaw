@@ -92,15 +92,15 @@ fn isPathAllowed(path: []const u8) bool {
 /// Check if a canonical (resolved) path is allowed
 fn isCanonicalPathAllowed(canonical_path: []const u8) bool {
     if (build_options.sandbox) {
-        // Sandbox: only /tmp/yoctoclaw-sandbox (handle macOS /private/tmp symlink)
-        return std.mem.startsWith(u8, canonical_path, "/tmp/yoctoclaw-sandbox") or
-            std.mem.startsWith(u8, canonical_path, "/private/tmp/yoctoclaw-sandbox");
+        // Sandbox: only /tmp/krillclaw-sandbox (handle macOS /private/tmp symlink)
+        return std.mem.startsWith(u8, canonical_path, "/tmp/krillclaw-sandbox") or
+            std.mem.startsWith(u8, canonical_path, "/private/tmp/krillclaw-sandbox");
     }
 
-    // Non-sandbox: allow /tmp/yoctoclaw-* (least privilege) or paths under cwd
+    // Non-sandbox: allow /tmp/krillclaw-* (least privilege) or paths under cwd
     // Handle macOS where /tmp -> /private/tmp
-    if (std.mem.startsWith(u8, canonical_path, "/tmp/yoctoclaw")) return true;
-    if (std.mem.startsWith(u8, canonical_path, "/private/tmp/yoctoclaw")) return true;
+    if (std.mem.startsWith(u8, canonical_path, "/tmp/krillclaw")) return true;
+    if (std.mem.startsWith(u8, canonical_path, "/private/tmp/krillclaw")) return true;
 
     const cwd_real = std.fs.cwd().realpathAlloc(std.heap.page_allocator, ".") catch return false;
     defer std.heap.page_allocator.free(cwd_real);
@@ -128,10 +128,10 @@ fn executeBash(allocator: std.mem.Allocator, input: []const u8) ToolResult {
     // In sandbox mode, run inside a restricted environment
     const shell_cmd = if (build_options.sandbox) blk: {
         // Create sandbox directory
-        std.fs.cwd().makePath("/tmp/yoctoclaw-sandbox") catch {};
+        std.fs.cwd().makePath("/tmp/krillclaw-sandbox") catch {};
         // Wrap command: restrict to sandbox dir, empty PATH (no network tools)
         break :blk std.fmt.allocPrint(allocator,
-            "cd /tmp/yoctoclaw-sandbox && PATH= /bin/sh -c {s}",
+            "cd /tmp/krillclaw-sandbox && PATH= /bin/sh -c {s}",
             .{shellQuote(allocator, unescaped_cmd)},
         ) catch unescaped_cmd;
     } else unescaped_cmd;
@@ -405,7 +405,7 @@ fn executeApplyPatch(allocator: std.mem.Allocator, input: []const u8) ToolResult
     const unescaped_patch = json.unescape(allocator, patch) catch patch;
     // Use unique temp file to prevent TOCTOU race condition
     const timestamp = @as(u64, @intCast(std.time.timestamp()));
-    const tmp_patch = std.fmt.allocPrint(allocator, "/tmp/yoctoclaw_patch_{d}.tmp", .{timestamp}) catch {
+    const tmp_patch = std.fmt.allocPrint(allocator, "/tmp/krillclaw_patch_{d}.tmp", .{timestamp}) catch {
         return .{ .output = "Failed to create temp path", .is_error = true };
     };
     defer allocator.free(tmp_patch);

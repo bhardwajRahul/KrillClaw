@@ -1,7 +1,7 @@
 const std = @import("std");
 const transport = @import("transport.zig");
 
-/// Serial/UART Transport for YoctoClaw.
+/// Serial/UART Transport for KrillClaw.
 ///
 /// Connects to a host machine via serial port (USB-UART, FTDI, etc.).
 /// The host runs a bridge script that relays to Claude API and executes tools.

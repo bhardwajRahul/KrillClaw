@@ -7,18 +7,13 @@
 <meta name="description" content="KrillClaw — the smallest AI agent runtime. 49KB binary, zero dependencies, written in Zig. Tested on 350+ edge devices. Works with any OpenAI-compatible LLM.">
 <meta name="keywords" content="edge AI, agent runtime, Zig, embedded AI, IoT, ESP32, microcontroller, LLM, Claude, OpenAI, Ollama, BLE, minimal, lightweight, zero dependencies">
 <meta property="og:title" content="KrillClaw™ — The Smallest Edge AI Agent Runtime">
-<meta property="og:description" content="49KB AI agent runtime. Tested on 350+ edge devices from $3 ESP32 to Raspberry Pi.">
+<meta property="og:description" content="49KB AI agent runtime. Tested on 350+ edge devices from $3 microcontrollers to Raspberry Pi.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://krillclaw.com">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="KrillClaw — 49KB Edge AI Runtime">
 <meta name="twitter:description" content="The smallest AI agent runtime. 49KB. Tested on 350+ edge devices. Works with any LLM.">
-<link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="canonical" href="https://krillclaw.com">
-<meta property="og:image" content="https://krillclaw.com/assets/og-image.jpg">
-<meta name="twitter:image" content="https://krillclaw.com/assets/og-image.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
 <link rel="alternate" hreflang="en" href="https://krillclaw.com">
 <link rel="alternate" hreflang="zh" href="https://krillclaw.com/zh/">
 <style>
@@ -130,16 +125,15 @@ dialog{animation:dialogIn 0.2s ease}
 </head>
 <body>
 <a href="#main" class="sr-only">Skip to content</a>
-<header role="banner"><nav style="display:flex;justify-content:space-between;align-items:center;max-width:900px;margin:0 auto;padding:1rem 2rem"><a href="/" style="color:#00ff88;text-decoration:none;font-weight:bold;font-size:1.2rem">🦐 KrillClaw</a><div style="display:flex;gap:1.5rem;align-items:center"><a href="https://github.com/krillclaw/KrillClaw" target="_blank" style="color:#e0e0e0;text-decoration:none;font-size:0.9rem;padding:0.4rem 1rem;border:1px solid #333;border-radius:6px;transition:all 0.2s" onmouseover="this.style.borderColor='#00ff88';this.style.color='#00ff88'" onmouseout="this.style.borderColor='#333';this.style.color='#e0e0e0'">⭐ GitHub</a><a href="#quickstart" style="color:#0a0a0a;text-decoration:none;font-size:0.9rem;padding:0.4rem 1rem;background:#00ff88;border-radius:6px">Get Started</a></div></nav>
+<header role="banner"><nav style="display:flex;justify-content:space-between;align-items:center;max-width:900px;margin:0 auto;padding:1rem 2rem"><a href="/" style="color:#00ff88;text-decoration:none;font-weight:bold;font-size:1.2rem">🦐 KrillClaw</a><div style="display:flex;gap:1.5rem;align-items:center"><a href="https://github.com/krillclaw/KrillClaw" target="_blank" style="color:#e0e0e0;text-decoration:none;font-size:0.9rem;padding:0.4rem 1rem;border:1px solid #333;border-radius:6px;transition:all 0.2s" onmouseover="this.style.borderColor='#00ff88';this.style.color='#00ff88'" onmouseout="this.style.borderColor='#333';this.style.color='#e0e0e0'">⭐ GitHub</a><a href="https://github.com/krillclaw/KrillClaw" target="_blank" style="color:#0a0a0a;text-decoration:none;font-size:0.9rem;padding:0.4rem 1rem;background:#00ff88;border-radius:6px">Get Started</a></div></nav>
 <a href="/zh/" style="position:fixed;top:1rem;right:1rem;z-index:999;padding:0.4rem 0.8rem;background:#111;border:1px solid #333;border-radius:6px;color:#888;font-size:0.75rem;text-decoration:none;font-family:inherit;transition:border-color 0.2s" onmouseover="this.style.borderColor='#00ff88';this.style.color='#00ff88'" onmouseout="this.style.borderColor='#333';this.style.color='#888'">中文</a>
 </header>
 <main id="main" role="main">
 <div class="container">
 
 <div class="hero">
-<img src="assets/hero-banner.jpg" alt="KrillClaw — kawaii shrimp mascot with retro CRT aesthetic" style="width:100%;max-width:700px;border-radius:12px;margin:0 auto 1.5rem;display:block;box-shadow:0 0 60px #ff886620">
+<div class="mascot-hero" style="display:flex;align-items:center;justify-content:center;font-size:80px">🦐</div>
 <h1 class="tagline">The smallest AI agent runtime for edge devices.</h1>
-<p style="color:#ff6600;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem">Patent Pending</p>
 <p class="size">49KB</p>
 <p style="color:#ff8833;font-size:1.3rem;margin-bottom:0.5rem;font-weight:600">full: ≤500KB</p>
 <p style="color:#888;margin-bottom:0.5rem">Zero dependencies · No OS required · Any LLM provider</p>
@@ -160,9 +154,6 @@ dialog{animation:dialogIn 0.2s ease}
 </div>
 </div>
 
-<pre class="install">zig build -Doptimize=ReleaseSmall
-export ANTHROPIC_API_KEY=...
-./krillclaw "read the temperature and adjust the fan"</pre>
 
 
 <a href="#waitlist" class="cta" style="background:#ff6600;margin-top:1rem" onclick="document.getElementById('waitlist-dialog').showModal();return false">🦐 I Want One!</a>
@@ -227,10 +218,10 @@ export ANTHROPIC_API_KEY=...
 <div style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:1.5rem">BLE / Serial Agent — 49 KB</div>
 <div style="display:flex;align-items:center;justify-content:center;gap:0;padding:1rem 0">
 <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">
-<div style="width:40px;height:40px;border-radius:4px;display:flex;align-items:center;justify-content:center;background:#00ff8815;border:1px solid #00ff88;position:relative" aria-label="ESP32-C3 chip">
+<div style="width:40px;height:40px;border-radius:4px;display:flex;align-items:center;justify-content:center;background:#00ff8815;border:1px solid #00ff88;position:relative" aria-label="Microcontroller">
 <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="4" width="20" height="20" rx="2" fill="#00ff8822" stroke="#00ff88" stroke-width="1"/><rect x="8" y="8" width="12" height="12" rx="1" fill="#00ff8844"/><text x="14" y="16" text-anchor="middle" fill="#00ff88" font-size="5" font-family="monospace">C3</text><rect x="1" y="8" width="3" height="2" rx="0.5" fill="#00ff88" opacity="0.6"/><rect x="1" y="13" width="3" height="2" rx="0.5" fill="#00ff88" opacity="0.6"/><rect x="1" y="18" width="3" height="2" rx="0.5" fill="#00ff88" opacity="0.6"/><rect x="24" y="8" width="3" height="2" rx="0.5" fill="#00ff88" opacity="0.6"/><rect x="24" y="13" width="3" height="2" rx="0.5" fill="#00ff88" opacity="0.6"/><rect x="24" y="18" width="3" height="2" rx="0.5" fill="#00ff88" opacity="0.6"/><rect x="8" y="1" width="2" height="3" rx="0.5" fill="#00ff88" opacity="0.6"/><rect x="13" y="1" width="2" height="3" rx="0.5" fill="#00ff88" opacity="0.6"/><rect x="18" y="1" width="2" height="3" rx="0.5" fill="#00ff88" opacity="0.6"/><rect x="8" y="24" width="2" height="3" rx="0.5" fill="#00ff88" opacity="0.6"/><rect x="13" y="24" width="2" height="3" rx="0.5" fill="#00ff88" opacity="0.6"/><rect x="18" y="24" width="2" height="3" rx="0.5" fill="#00ff88" opacity="0.6"/></svg>
 </div>
-<div style="font-size:0.6rem;color:#888;text-align:center">ESP32-C3<br>$3</div>
+<div style="font-size:0.6rem;color:#888;text-align:center">Microcontroller<br>from $3</div>
 </div>
 <div style="position:relative;width:64px;height:2px;margin:0 4px;flex-shrink:0">
 <div style="position:absolute;top:0;left:0;right:0;height:2px;border-radius:1px;background:#00ff88;opacity:0.3"></div>
@@ -260,10 +251,10 @@ export ANTHROPIC_API_KEY=...
 <div style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:1.5rem">Full HTTP Agent — ≤500 KB</div>
 <div style="display:flex;align-items:center;justify-content:center;gap:0;padding:1rem 0">
 <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">
-<div style="width:48px;height:48px;border-radius:4px;display:flex;align-items:center;justify-content:center;background:#ff883315;border:1px solid #ff8833;position:relative" aria-label="ESP32-S3 chip">
+<div style="width:48px;height:48px;border-radius:4px;display:flex;align-items:center;justify-content:center;background:#ff883315;border:1px solid #ff8833;position:relative" aria-label="Microcontroller">
 <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect x="5" y="5" width="26" height="26" rx="2" fill="#ff883322" stroke="#ff8833" stroke-width="1"/><rect x="10" y="10" width="16" height="16" rx="1" fill="#ff883344"/><text x="18" y="20" text-anchor="middle" fill="#ff8833" font-size="6" font-family="monospace">S3</text><rect x="1" y="10" width="4" height="2" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="1" y="15" width="4" height="2" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="1" y="20" width="4" height="2" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="1" y="25" width="4" height="2" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="31" y="10" width="4" height="2" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="31" y="15" width="4" height="2" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="31" y="20" width="4" height="2" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="31" y="25" width="4" height="2" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="10" y="1" width="2" height="4" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="15" y="1" width="2" height="4" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="20" y="1" width="2" height="4" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="25" y="1" width="2" height="4" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="10" y="31" width="2" height="4" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="15" y="31" width="2" height="4" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="20" y="31" width="2" height="4" rx="0.5" fill="#ff8833" opacity="0.6"/><rect x="25" y="31" width="2" height="4" rx="0.5" fill="#ff8833" opacity="0.6"/></svg>
 </div>
-<div style="font-size:0.6rem;color:#888;text-align:center">ESP32-S3<br>$5</div>
+<div style="font-size:0.6rem;color:#888;text-align:center">Microcontroller<br>from $5</div>
 </div>
 <div style="position:relative;width:140px;height:2px;margin:0 4px;flex-shrink:0">
 <div style="position:absolute;top:0;left:0;right:0;height:2px;border-radius:1px;background:#ff8833;opacity:0.3"></div>
@@ -284,7 +275,7 @@ export ANTHROPIC_API_KEY=...
 <div style="background:#111;border:1px solid #00ff8844;border-radius:12px;padding:2rem">
 <div style="font-size:3rem;font-weight:bold;color:#00ff88;margin-bottom:0.25rem">49KB</div>
 <div style="font-size:0.85rem;color:#00ff88;margin-bottom:1rem">BLE / Serial</div>
-<div style="color:#888;font-size:0.8rem;line-height:2">No WiFi needed · No API keys on device · Ultra-low power (~10mA) · $3 ESP32-C3</div>
+<div style="color:#888;font-size:0.8rem;line-height:2">No WiFi needed · No API keys on device · Ultra-low power (~10mA) · From $3 hardware</div>
 <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #1a1a1a;color:#666;font-size:0.75rem"><strong style="color:#00ff88">Best for:</strong> wearables, vehicles, body-worn, battery-powered, anything near a BLE gateway (phone, Pi, laptop)</div>
 </div>
 <div style="background:#111;border:1px solid #ff883344;border-radius:12px;padding:2rem">
@@ -314,7 +305,7 @@ export ANTHROPIC_API_KEY=...
 <tr><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#e0e0e0">GPIO / sensors</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#00ff88;text-align:center">✅ direct</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#00ff88;text-align:center">✅</td></tr>
 <tr><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#e0e0e0">API key on device</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#ffaa00;text-align:center" title="Key stays on the BLE gateway — never on edge device">❌ secure! ⚡</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#00ff88;text-align:center">✅ required</td></tr>
 <tr><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#e0e0e0">Power draw</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#00ff88;text-align:center">~10 mA</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#00ff88;text-align:center">~100 mA</td></tr>
-<tr><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#e0e0e0">Min hardware</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#00ff88;text-align:center">$3 ESP32-C3</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#00ff88;text-align:center">$5 ESP32-S3 / Pi</td></tr>
+<tr><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#e0e0e0">Min hardware</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#00ff88;text-align:center">$3 microcontroller</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#00ff88;text-align:center">$5 microcontroller / Pi</td></tr>
 <tr><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#e0e0e0">Offline capable</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#00ff88;text-align:center">✅ local ops</td><td style="padding:10px 16px;border-bottom:1px solid #1a1a1a;color:#00ff88;text-align:center">✅ queues calls</td></tr>
 </tbody>
 </table>
@@ -394,7 +385,7 @@ export ANTHROPIC_API_KEY=...
 </div>
 
 <div class="section">
-<h2><img src="assets/mascot-small.jpg" alt="KrillClaw shrimp mascot" class="mascot-inline">How it compares</h2>
+<h2><span class="mascot-inline" style="display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem">🦐</span>How it compares</h2>
 <p style="color:#888;margin-bottom:1rem;font-size:0.85rem">Embedded AI agent runtimes — a new category.</p>
 <table>
 <tr><th></th><th>KrillClaw™</th><th>MimiClaw</th><th>PicoClaw</th><th>OpenClaw</th></tr>
@@ -403,7 +394,7 @@ export ANTHROPIC_API_KEY=...
 <tr><td>RAM usage</td><td class="highlight">2 MB</td><td>~512 KB</td><td>~10 MB</td><td>~200 MB</td></tr>
 <tr><td>Source</td><td class="highlight">~3,500 LOC</td><td>~7K LOC</td><td>?</td><td>~40K LOC</td></tr>
 <tr><td>Dependencies</td><td class="highlight">0</td><td>ESP-IDF</td><td>Go stdlib</td><td>~108 npm</td></tr>
-<tr><td>Target hardware</td><td class="highlight">$3 ESP32+</td><td>$5 ESP32-S3</td><td>$10 LicheeRV</td><td>Pi / VPS / Mac</td></tr>
+<tr><td>Target hardware</td><td class="highlight">$3 Microcontroller</td><td>$5 Microcontroller</td><td>$10 LicheeRV</td><td>Pi / VPS / Mac</td></tr>
 <tr><td>Needs OS?</td><td class="highlight">No</td><td class="highlight">No</td><td>Linux</td><td>Linux / macOS</td></tr>
 <tr><td>Memory safety</td><td class="highlight">Yes (Zig)</td><td>No (C)</td><td>Yes (Go GC)</td><td>Yes (JS)</td></tr>
 <tr><td>LLM providers</td><td class="highlight">Any compatible</td><td>Claude + OpenAI</td><td>?</td><td>Multi</td></tr>
@@ -508,7 +499,7 @@ tools_coding.zig — 7 tools (280 lines)</pre>
 </div>
 
 <div class="section">
-<h2><img src="assets/mascot-small.jpg" alt="KrillClaw shrimp mascot" class="mascot-inline">What becomes possible</h2>
+<h2><span class="mascot-inline" style="display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem">🦐</span>What becomes possible</h2>
 <p style="color:#888;margin-bottom:2rem">When every device has an AI brain and WiFi, ordinary things become extraordinary.</p>
 
 <div style="display:grid;grid-template-columns:1fr;gap:2rem;max-width:800px">
@@ -517,7 +508,7 @@ tools_coding.zig — 7 tools (280 lines)</pre>
 <summary>
 <div><span style="color:#00aaff;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em">🏠 Smart Home</span><br><span style="color:#fff;font-size:1rem;font-weight:600">Your fridge manages your groceries</span></div>
 </summary>
-<div class="card-body"><p style="color:#888;font-size:0.9rem;line-height:1.7">A $3 ESP32 inside your fridge watches what gets consumed. It notices you're low on oat milk, checks your Instacart history, and pings you on WhatsApp: <em style="color:#aaa">"You tried that new Greek yogurt last week but didn't reorder — want to go back to your usual Fage, or give it another shot?"</em> It learns your preferences over time. No app. No screen. Just a chip that pays attention.</p></div>
+<div class="card-body"><p style="color:#888;font-size:0.9rem;line-height:1.7">A $3 microcontroller inside your fridge watches what gets consumed. It notices you're low on oat milk, checks your Instacart history, and pings you on WhatsApp: <em style="color:#aaa">"You tried that new Greek yogurt last week but didn't reorder — want to go back to your usual Fage, or give it another shot?"</em> It learns your preferences over time. No app. No screen. Just a chip that pays attention.</p></div>
 </details>
 
 <details class="usecase-card" style="border-left:3px solid #00aaff">
@@ -571,7 +562,7 @@ tools_coding.zig — 7 tools (280 lines)</pre>
 <summary>
 <div><span style="color:#ffcc00;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em">🚗 Automotive</span><br><span style="color:#fff;font-size:1rem;font-weight:600">Your 2018 car becomes a 2026 car</span></div>
 </summary>
-<div class="card-body"><p style="color:#888;font-size:0.9rem;line-height:1.7">Your car's OBD-II port speaks data — but the car's own computer was frozen in time the day it shipped. Plug in a $3 ESP32 with KrillClaw. Now it reads engine codes, cross-references them with repair databases, monitors fuel efficiency trends, and texts you: <em style="color:#aaa">"Your fuel economy dropped 8% this month — likely the air filter based on mileage. $12 part, 5-minute swap. Want me to order one?"</em> A new car with these smarts costs $45K. This costs $3.</p></div>
+<div class="card-body"><p style="color:#888;font-size:0.9rem;line-height:1.7">Your car's OBD-II port speaks data — but the car's own computer was frozen in time the day it shipped. Plug in a $3 microcontroller with KrillClaw. Now it reads engine codes, cross-references them with repair databases, monitors fuel efficiency trends, and texts you: <em style="color:#aaa">"Your fuel economy dropped 8% this month — likely the air filter based on mileage. $12 part, 5-minute swap. Want me to order one?"</em> A new car with these smarts costs $45K. This costs $3.</p></div>
 </details>
 
 <details class="usecase-card" style="border-left:3px solid #ffcc00">
@@ -601,7 +592,7 @@ tools_coding.zig — 7 tools (280 lines)</pre>
 </div>
 
 <div class="section">
-<h2><img src="assets/mascot-small.jpg" alt="KrillClaw shrimp mascot" class="mascot-inline">Runs on a $3 chip</h2>
+<h2><span class="mascot-inline" style="display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem">🦐</span>Runs on a $3 chip</h2>
 <p style="color:#888;margin-bottom:1.5rem">WiFi, BLE, and serial built in. Connects to any LLM over the air.</p>
 
 <div class="carousel-container">
@@ -710,12 +701,6 @@ tools_coding.zig — 7 tools (280 lines)</pre>
 </dialog>
 
 <div class="section" style="text-align:center">
-<h2>Get started</h2>
-<pre class="install" style="text-align:left"># Coming soon — join the waitlist for early access
-git clone https://github.com/krillclaw/KrillClaw
-cd KrillClaw
-zig build -Doptimize=ReleaseSmall
-./zig-out/bin/krillclaw "monitor sensors and alert on anomalies"</pre>
 <p style="margin-top:2rem">
 <a href="#waitlist" class="cta" style="background:#ff6600" onclick="document.getElementById('waitlist-dialog').showModal();return false">🦐 I Want One!</a>
 
@@ -731,7 +716,7 @@ zig build -Doptimize=ReleaseSmall
 </details>
 <details class="faq-item">
 <summary>What's the difference between Lite and Full?</summary>
-<div class="faq-answer"><strong>Lite</strong> is a 49KB BLE/serial agent that runs on a $3 chip — sensors, actuators, local logic, ReAct reasoning. It talks to a nearby BLE gateway (phone, Pi, laptop) for LLM calls. No WiFi, no API keys on device, ultra-low power (~10mA).<br><strong>Full</strong> is a ≤500KB full agent with built-in HTTP/TLS. Runs on ESP32-S3, Raspberry Pi, or any Linux board. Talks directly to any LLM provider. Can also coordinate multiple lite nodes.</div>
+<div class="faq-answer"><strong>Lite</strong> is a 49KB BLE/serial agent that runs on a $3 microcontroller — sensors, actuators, local logic, ReAct reasoning. It talks to a nearby BLE gateway (phone, Pi, laptop) for LLM calls. No WiFi, no API keys on device, ultra-low power (~10mA).<br><strong>Full</strong> is a ≤500KB full agent with built-in HTTP/TLS. Runs on any WiFi-capable microcontroller, Raspberry Pi, or Linux board. Talks directly to any LLM provider. Can also coordinate multiple lite nodes.</div>
 </details>
 <details class="faq-item">
 <summary>How much does the API cost?</summary>
@@ -742,8 +727,8 @@ zig build -Doptimize=ReleaseSmall
 <div class="faq-answer"><strong>Lite:</strong> Continues local operations (sensor reads, GPIO, scheduled tasks). Queues messages and syncs when BLE reconnects.<br><strong>Full:</strong> Queues LLM calls, retries with exponential backoff, resumes seamlessly when WiFi returns. Local operations are uninterrupted.</div>
 </details>
 <details class="faq-item">
-<summary>Can I use it without an ESP32?</summary>
-<div class="faq-answer">Yes — the full profile runs on any Linux ARM/RISC-V board, Raspberry Pi, routers, anything with 2MB RAM. ESP32 is the smallest target, not the only one.</div>
+<summary>What hardware does it support?</summary>
+<div class="faq-answer">The full profile runs on any Linux ARM/RISC-V board, Raspberry Pi, routers, anything with 2MB RAM. The lite profile runs on microcontrollers as small as $3. ESP32 is one example, not the only one.</div>
 </details>
 <details class="faq-item">
 <summary>Is it really 49KB?</summary>
@@ -769,7 +754,7 @@ zig build -Doptimize=ReleaseSmall
 </main>
 
 <footer role="contentinfo">
-<img src="assets/mascot-small.jpg" alt="KrillClaw shrimp mascot" class="mascot-footer">Built by <a href="https://accelerando.ai">Accelerando AI</a> · BSL 1.1 (→ Apache 2.0) · Patent Pending<br style="margin-top:0.5rem"><a href="/privacy" style="color:#555">Privacy</a> · <a href="/terms" style="color:#555">Terms</a> · <a href="/press" style="color:#555">Press</a> &middot; <a href="/license" style="color:#555">License</a> · <a href="/cdn-cgi/l/email-protection#fc9499909093bc9d9f9f9990998e9d929893d29d95" style="color:#555"><span class="__cf_email__" data-cfemail="ee868b828281ae8f8d8d8b828b9c8f808a81c08f87">[email&#160;protected]</span></a>
+<span class="mascot-footer" style="display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem">🦐</span>Built by <a href="https://accelerando.ai">Accelerando AI</a> · BSL 1.1 (→ Apache 2.0)<br style="margin-top:0.5rem"><a href="/privacy" style="color:#555">Privacy</a> · <a href="/terms" style="color:#555">Terms</a> · <a href="/press" style="color:#555">Press</a> &middot; <a href="/license" style="color:#555">License</a> · <a href="/cdn-cgi/l/email-protection#fc9499909093bc9d9f9f9990998e9d929893d29d95" style="color:#555"><span class="__cf_email__" data-cfemail="ee868b828281ae8f8d8d8b828b9c8f808a81c08f87">[email&#160;protected]</span></a>
 </footer>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="application/ld+json">
@@ -777,7 +762,7 @@ zig build -Doptimize=ReleaseSmall
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "KrillClaw™",
-  "description": "KrillClaw™ — the smallest AI agent runtime for edge devices. 49KB binary, zero dependencies, written in Zig. Runs on a $3 ESP32.",
+  "description": "KrillClaw™ — the smallest AI agent runtime for edge devices. 49KB binary, zero dependencies, written in Zig. Runs on microcontrollers from $3.",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Linux, macOS, Embedded",
   "offers": {
