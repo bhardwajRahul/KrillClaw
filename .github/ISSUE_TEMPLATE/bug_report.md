@@ -3,24 +3,42 @@ name: Bug Report
 about: Report a bug in KrillClaw
 title: '[BUG] '
 labels: bug
+assignees: ''
 ---
 
-**Describe the bug**
-A clear description of what's wrong.
+## Description
 
-**To reproduce**
-1. Build with '...'
-2. Run '...'
-3. See error
+A clear description of what the bug is.
 
-**Expected behavior**
+## Steps to Reproduce
+
+1. Build with `zig build -D...`
+2. Run `./zig-out/bin/krillclaw ...`
+3. Observe error
+
+## Expected Behavior
+
 What should happen instead.
 
-**Environment**
-- OS/Target:
-- Zig version:
-- KrillClaw version/commit:
-- Build profile (Lite/Full):
+## Actual Behavior
 
-**Additional context**
-Logs, screenshots, etc.
+What actually happens. Include error output if available.
+
+## Environment
+
+- **OS / Target:** (e.g., macOS 14, Ubuntu 24.04, thumb-none-eabi)
+- **Zig version:** (`zig version`)
+- **KrillClaw version / commit:** (`git rev-parse --short HEAD`)
+- **Build profile:** (coding / iot / robotics)
+- **Build flags:** (e.g., `-Dble=true -Dsandbox=true -Doptimize=ReleaseSmall`)
+- **LLM Provider:** (Claude / OpenAI / Ollama)
+
+## Logs / Output
+
+```
+Paste relevant terminal output here
+```
+
+## Additional Context
+
+Any other context — screenshots, hardware details, config file, etc.
