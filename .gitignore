@@ -6,6 +6,4 @@ __pycache__/
 .env
 bridge/venv/
 
-# Internal review docs and experiments
 .reviews/
-yoctoclaw-store/
