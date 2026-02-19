@@ -1,5 +1,5 @@
 .{
-    .name = .yoctoclaw,
+    .name = "krillclaw",
     .version = "0.1.0",
     .fingerprint = 0x5894fed4cbba0fd0,
     .paths = .{
