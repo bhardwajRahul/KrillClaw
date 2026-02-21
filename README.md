@@ -25,7 +25,7 @@
 
 ---
 
-180KB binary. 0 dependencies. 17 source files. Runs on a $3 microcontroller or a cloud server.
+59KB binary. 0 dependencies. 17 source files. Runs on a $3 microcontroller or a cloud server.
 
 KrillClaw is an autonomous AI agent runtime written in Zig. It connects to any LLM (Claude, OpenAI, Ollama), executes tools, and loops until the task is done — in under 200KB of compiled code.
 
