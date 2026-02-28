@@ -16,13 +16,20 @@ pub const ToolResult = profile_mod.ToolResult;
 /// Combined tool definitions: profile-specific + shared tools.
 pub const tool_definitions = profile_mod.tool_definitions ++ shared.tool_definitions;
 
-/// Execute a tool call — tries shared tools first, then delegates to profile.
+/// Execute a tool call — tries shared tools first, then profile, then bridge fallback.
 pub fn execute(allocator: std.mem.Allocator, tool: types.ToolUse) ToolResult {
     // Shared tools available to all profiles
     if (shared.tryExecute(allocator, tool)) |result| {
         return .{ .output = result.output, .is_error = result.is_error };
     }
-    return profile_mod.execute(allocator, tool);
+    // Profile-specific tools
+    const profile_result = profile_mod.execute(allocator, tool);
+    // If profile doesn't know the tool, try bridge (supports plugins)
+    if (std.mem.eql(u8, profile_result.output, "Unknown tool")) {
+        const bridge_result = shared.executeBridgeTool(allocator, tool.name, tool.input_raw);
+        return .{ .output = bridge_result.output, .is_error = bridge_result.is_error };
+    }
+    return profile_result;
 }
 
 // Re-export matchGlob for tests (only available in coding profile)
@@ -34,12 +41,15 @@ pub const matchGlob = if (build_options.profile == .coding) @import("tools_codin
 // Tests (these test the coding profile by default)
 // ============================================================
 
-test "execute unknown tool" {
+test "execute unknown tool falls through to bridge" {
     if (build_options.profile != .coding) return;
     const alloc = std.heap.page_allocator;
     const result = execute(alloc, .{ .id = "t1", .name = "nonexistent", .input_raw = "{}" });
+    // Unknown tools now attempt bridge delegation (plugin support).
+    // The bridge call may fail (no bridge available in test), but it should
+    // not return "Unknown tool" — that string triggers the fallback.
     try std.testing.expect(result.is_error);
-    try std.testing.expectEqualStrings("Unknown tool", result.output);
+    try std.testing.expect(!std.mem.eql(u8, result.output, "Unknown tool"));
 }
 
 test "bash echo" {
