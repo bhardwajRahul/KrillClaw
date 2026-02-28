@@ -255,7 +255,8 @@ fn bridgeCall(allocator: std.mem.Allocator, bridge_json: []const u8) ToolResult 
 }
 
 /// Execute a bridge tool by wrapping input_raw into an action JSON.
-fn executeBridgeTool(allocator: std.mem.Allocator, action: []const u8, input_raw: []const u8) ToolResult {
+/// Public so tools.zig can use it as a fallback for plugin-provided tools.
+pub fn executeBridgeTool(allocator: std.mem.Allocator, action: []const u8, input_raw: []const u8) ToolResult {
     // Build {"action":"<action>", ...rest_of_input}
     // We insert "action":"<action>" into the input JSON object
     var buf: std.ArrayList(u8) = .{};

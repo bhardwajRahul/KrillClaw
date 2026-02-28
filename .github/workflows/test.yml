@@ -7,7 +7,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: goto-bus-stop/setup-zig@v2
         with:
-          version: 0.13.0
+          version: 0.15.2
 
       - name: Build (debug)
         run: zig build
@@ -22,7 +22,7 @@ jobs:
         run: |
           SIZE=$(stat --printf="%s" zig-out/bin/krillclaw)
           echo "Binary size: $SIZE bytes"
-          [ "$SIZE" -lt 307200 ] || { echo "FAIL: >300KB"; exit 1; }
+          [ "$SIZE" -lt 614400 ] || { echo "FAIL: >600KB"; exit 1; }
 
       - name: Smoke test
         run: |

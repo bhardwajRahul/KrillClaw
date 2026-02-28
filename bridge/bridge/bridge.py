@@ -1000,6 +1000,95 @@ class TelegramTransport:
                 self._send_message(chat_id, reply)
 
 
+def load_channels_config() -> dict:
+    """Load channel configuration from ~/.krillclaw/channels.json."""
+    config_path = os.path.expanduser("~/.krillclaw/channels.json")
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            logging.warning("Failed to load channels.json: %s", e)
+    return {}
+
+
+async def serve_channels(bridge: "KrillClawBridge", channel_names: list[str], config: dict):
+    """Start the multi-channel message router."""
+    from channels import MessageRouter, IncomingMessage
+    from channels.telegram import TelegramChannel
+    from channels.mqtt import MqttChannel
+    from channels.webhook import WebhookChannel
+    from channels.websocket import WebSocketChannel
+
+    async def handle_message(msg: IncomingMessage) -> str:
+        """Route incoming message through the bridge."""
+        msg_payload = json.dumps({
+            "type": "api",
+            "body": json.dumps({
+                "messages": [{"role": "user", "content": msg.text}],
+                "max_tokens": 4096,
+            }),
+        }).encode("utf-8")
+        try:
+            raw_response = bridge.handle_message(msg_payload)
+            resp = json.loads(raw_response)
+            if resp.get("error"):
+                return f"[error] {resp['error']}"
+            body = json.loads(resp.get("body", "{}"))
+            parts = []
+            for block in body.get("content", []):
+                if block.get("type") == "text":
+                    parts.append(block["text"])
+            return "\n".join(parts) if parts else "(no text in response)"
+        except Exception as exc:
+            return f"[bridge error] {exc}"
+
+    router = MessageRouter(handle_message)
+
+    channel_registry = {
+        "telegram": lambda: TelegramChannel(
+            token=config.get("telegram", {}).get("token", os.environ.get("TELEGRAM_BOT_TOKEN", "")),
+            allowed_users=config.get("telegram", {}).get("allowed_users"),
+            poll_timeout=config.get("telegram", {}).get("poll_timeout", 30),
+        ),
+        "mqtt": lambda: MqttChannel(
+            broker=config.get("mqtt", {}).get("broker", "localhost"),
+            port=config.get("mqtt", {}).get("port", 1883),
+            subscribe_topic=config.get("mqtt", {}).get("subscribe_topic", "krillclaw/in"),
+            publish_topic=config.get("mqtt", {}).get("publish_topic", "krillclaw/out"),
+        ),
+        "webhook": lambda: WebhookChannel(
+            host=config.get("webhook", {}).get("host", "0.0.0.0"),
+            port=config.get("webhook", {}).get("port", 8080),
+            auth_token=config.get("webhook", {}).get("auth_token"),
+        ),
+        "websocket": lambda: WebSocketChannel(
+            host=config.get("websocket", {}).get("host", "0.0.0.0"),
+            port=config.get("websocket", {}).get("port", 8765),
+            auth_token=config.get("websocket", {}).get("auth_token"),
+            agent_binary=config.get("websocket", {}).get("agent_binary", "krillclaw"),
+        ),
+    }
+
+    for name in channel_names:
+        factory = channel_registry.get(name)
+        if factory is None:
+            logging.error("Unknown channel: %s (available: %s)", name, list(channel_registry.keys()))
+            continue
+        try:
+            channel = factory()
+            router.register(channel)
+        except Exception:
+            logging.exception("Failed to create channel: %s", name)
+
+    try:
+        await router.start_all()
+    except KeyboardInterrupt:
+        logging.info("Shutting down channels...")
+    finally:
+        await router.stop_all()
+
+
 def main():
     parser = argparse.ArgumentParser(description="KrillClaw Bridge")
     parser.add_argument("--socket", help="Unix socket path (simulation mode)")
@@ -1015,11 +1104,45 @@ def main():
     )
     parser.add_argument("--model", default="claude-sonnet-4-5-20250929")
     parser.add_argument("--exec-tool", dest="exec_tool", help="Execute a tool command (JSON string)")
+    parser.add_argument("--serve", action="store_true", help="Start multi-channel server mode")
+    parser.add_argument(
+        "--channels",
+        help="Comma-separated list of channels to enable (e.g. telegram,webhook,websocket)",
+    )
     args = parser.parse_args()
 
     # --exec-tool mode: no API key needed, just dispatch and exit
     if args.exec_tool:
         exec_tool_mode(args.exec_tool)
+        return
+
+    # --serve mode: multi-channel server
+    if args.serve:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+        )
+        channel_names = [c.strip() for c in (args.channels or "webhook").split(",")]
+        config = load_channels_config()
+
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            print("Set ANTHROPIC_API_KEY environment variable")
+            sys.exit(1)
+
+        bridge = KrillClawBridge(api_key=api_key, model=args.model)
+
+        # Load plugins if available
+        try:
+            from plugins import discover_plugins
+            plugins = discover_plugins()
+            if plugins:
+                TOOL_HANDLERS.update(plugins)
+                logging.info("Loaded %d plugin(s): %s", len(plugins), list(plugins.keys()))
+        except ImportError:
+            pass
+
+        asyncio.run(serve_channels(bridge, channel_names, config))
         return
 
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")

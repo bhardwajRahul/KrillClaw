@@ -301,6 +301,67 @@ Preset sizes: `Arena4K`, `Arena16K`, `Arena32K`, `Arena128K`, `Arena256K`.
 
 > **BLE note:** The BLE transport implements framing and GATT service UUIDs with desktop simulation via Unix sockets. Real hardware integration requires linking against the platform BLE SDK (e.g., Nordic SoftDevice). See `ble.zig` for integration points.
 
+## Multi-Channel Gateway (Phase 3)
+
+The bridge supports multiple message channels simultaneously via `--serve` mode:
+
+```bash
+# Start with webhook channel (default)
+python bridge/bridge/bridge.py --serve --channels webhook
+
+# Start with multiple channels
+python bridge/bridge/bridge.py --serve --channels telegram,webhook,websocket
+
+# WebSocket gateway for browser-based clients
+python bridge/bridge/bridge.py --serve --channels websocket
+```
+
+### Available Channels
+
+| Channel | Transport | Use Case |
+|---------|-----------|----------|
+| **webhook** | HTTP POST | Simplest integration — any HTTP client |
+| **websocket** | WebSocket | Browser clients, streaming responses |
+| **telegram** | Telegram Bot API | Chat-based interaction |
+| **mqtt** | MQTT pub/sub | IoT device messaging |
+
+### WebSocket Wire Protocol
+
+```json
+→ {"type": "message", "text": "fix the bug"}
+← {"type": "text", "text": "Let me look at that..."}
+← {"type": "done"}
+```
+
+### Channel Configuration
+
+Per-channel settings via `~/.krillclaw/channels.json`:
+
+```json
+{
+  "webhook": {"port": 8080, "auth_token": "secret"},
+  "websocket": {"port": 8765, "agent_binary": "./zig-out/bin/krillclaw"},
+  "telegram": {"token": "bot123:ABC", "allowed_users": [12345]},
+  "mqtt": {"broker": "localhost", "subscribe_topic": "krillclaw/in"}
+}
+```
+
+## Skills / Plugins
+
+Extend the agent with custom Python tools. Drop a `.py` file in `~/.krillclaw/plugins/`:
+
+```python
+# ~/.krillclaw/plugins/my_tool.py
+TOOL_NAME = "my_custom_tool"
+TOOL_DESCRIPTION = "Does something custom."
+TOOL_SCHEMA = {"type": "object", "properties": {"input": {"type": "string"}}}
+
+def handle(data: dict) -> dict:
+    return {"result": f"processed: {data.get('input', '')}"}
+```
+
+Plugins are discovered on bridge startup. Unknown tools from the Zig agent automatically fall through to the bridge, which routes them to the matching plugin handler. Built-in tool names cannot be overridden.
+
 ## Configuration
 
 ```bash
@@ -351,7 +412,7 @@ bash test/integration.sh  # 9 integration tests
 
 Tests cover JSON parsing, SSE streaming, arena allocation, context truncation, tool execution, glob matching, and security injection attempts.
 
-CI runs on every push with a binary size gate (<300KB).
+CI runs on every push with a binary size gate (<600KB).
 
 ## Building
 
@@ -374,7 +435,7 @@ See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
 - **JSON parser is flat** — finds first matching key at any depth (works for LLM API responses where keys are unambiguous)
 - **Token estimation is heuristic** — ~4 chars/token approximation, not billing-accurate
-- **No conversation persistence** — sessions start fresh (use KV store for data that should survive restarts)
+- **Session persistence via bridge** — save/load conversation history through bridge tools
 - **BLE transport is protocol-only** — real hardware needs platform BLE SDK linking
 - **Serial baud uses `stty`** — Linux/macOS only
 - **Requires Zig 0.15+**
