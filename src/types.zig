@@ -148,4 +148,10 @@ pub const Config = struct {
     serial_port: ?[]const u8 = null,
     serial_baud: u32 = 115200,
     base_url: ?[]const u8 = null,
+
+    // Cron/heartbeat
+    cron_interval: u32 = 0, // seconds between agent runs. 0 = disabled
+    cron_prompt: []const u8 = "heartbeat: check status and report any anomalies",
+    heartbeat_interval: u32 = 0, // seconds between heartbeat logs. 0 = disabled
+    cron_max_runs: u32 = 0, // max cron runs. 0 = unlimited
 };

@@ -1,6 +1,7 @@
 const std = @import("std");
 const build_options = @import("build_options");
 const types = @import("types.zig");
+const json = @import("json.zig");
 
 /// Abstract transport interface.
 ///
@@ -80,13 +81,12 @@ pub const RpcRequest = struct {
 /// Provider name is escaped; body is raw JSON (passed through as-is).
 pub fn buildApiRpc(allocator: std.mem.Allocator, provider: []const u8, body: []const u8) ![]const u8 {
     var buf: std.ArrayList(u8) = .{};
-    const w = buf.writer();
+    const w = buf.writer(allocator);
     try w.writeAll("{\"type\":\"api\",\"provider\":\"");
     // Provider is a controlled enum string (claude/openai/ollama) but we
     // escape anyway for correctness if custom providers are added later.
-    for (provider) |c| {
-        if (c == '"') try w.writeAll("\\\"") else if (c == '\\') try w.writeAll("\\\\") else try w.writeByte(c);
-    }
+    // Use json.writeEscaped for complete escaping (including \n, \r, \t, control chars).
+    try json.writeEscaped(w, provider);
     try w.writeAll("\",\"body\":");
     try w.writeAll(body); // body is already valid JSON
     try w.writeByte('}');
@@ -97,11 +97,10 @@ pub fn buildApiRpc(allocator: std.mem.Allocator, provider: []const u8, body: []c
 /// Tool name is escaped; input is raw JSON (passed through as-is).
 pub fn buildToolRpc(allocator: std.mem.Allocator, name: []const u8, input: []const u8) ![]const u8 {
     var buf: std.ArrayList(u8) = .{};
-    const w = buf.writer();
+    const w = buf.writer(allocator);
     try w.writeAll("{\"type\":\"tool\",\"name\":\"");
-    for (name) |c| {
-        if (c == '"') try w.writeAll("\\\"") else if (c == '\\') try w.writeAll("\\\\") else try w.writeByte(c);
-    }
+    // Use json.writeEscaped for complete escaping (including \n, \r, \t, control chars).
+    try json.writeEscaped(w, name);
     try w.writeAll("\",\"input\":");
     try w.writeAll(input); // input is already valid JSON
     try w.writeByte('}');
@@ -126,4 +125,55 @@ pub fn chunkMessage(allocator: std.mem.Allocator, data: []const u8) ![]const []c
         chunks[i] = chunk;
     }
     return chunks;
+}
+
+// ============================================================
+// Tests
+// ============================================================
+
+test "buildApiRpc escapes provider with special chars" {
+    const alloc = std.testing.allocator;
+    // Provider with newline, tab, quote, and backslash should be properly escaped
+    const result = try buildApiRpc(alloc, "evil\n\"\\\tprovider", "{\"key\":\"val\"}");
+    defer alloc.free(result);
+    // Verify the output is valid JSON structure and special chars are escaped
+    try std.testing.expect(std.mem.indexOf(u8, result, "\\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, result, "\\t") != null);
+    try std.testing.expect(std.mem.indexOf(u8, result, "\\\\") != null);
+    // The raw newline/tab should NOT appear unescaped
+    for (result) |c| {
+        if (c == '\n' or c == '\t') {
+            return error.TestUnexpectedResult;
+        }
+    }
+}
+
+test "buildToolRpc escapes name with special chars" {
+    const alloc = std.testing.allocator;
+    // Tool name with newline, quote, backslash should be properly escaped
+    const result = try buildToolRpc(alloc, "tool\"\nname", "{\"cmd\":\"ls\"}");
+    defer alloc.free(result);
+    // The raw newline should NOT appear unescaped in the output
+    for (result) |c| {
+        if (c == '\n') {
+            return error.TestUnexpectedResult;
+        }
+    }
+    // Escaped forms should be present
+    try std.testing.expect(std.mem.indexOf(u8, result, "\\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, result, "\\\"") != null);
+}
+
+test "buildApiRpc normal provider" {
+    const alloc = std.testing.allocator;
+    const result = try buildApiRpc(alloc, "claude", "{\"model\":\"test\"}");
+    defer alloc.free(result);
+    try std.testing.expectEqualStrings("{\"type\":\"api\",\"provider\":\"claude\",\"body\":{\"model\":\"test\"}}", result);
+}
+
+test "buildToolRpc normal name" {
+    const alloc = std.testing.allocator;
+    const result = try buildToolRpc(alloc, "bash", "{\"command\":\"ls\"}");
+    defer alloc.free(result);
+    try std.testing.expectEqualStrings("{\"type\":\"tool\",\"name\":\"bash\",\"input\":{\"command\":\"ls\"}}", result);
 }

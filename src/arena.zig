@@ -173,6 +173,24 @@ test "arena multiple allocations" {
     try std.testing.expect(arena.usagePercent() < 50);
 }
 
+test "arena integer overflow in alloc" {
+    // Verify that alloc() correctly rejects allocations where
+    // aligned_offset + len would overflow, which could bypass the bounds check.
+    var arena = FixedArena(64).init();
+    const alloc = arena.allocator();
+
+    // First, consume some space so offset > 0
+    _ = try alloc.alloc(u8, 16);
+
+    // Try to allocate std.math.maxInt(usize) bytes — this must fail, not wrap around
+    const result = alloc.alloc(u8, std.math.maxInt(usize));
+    try std.testing.expect(result == error.OutOfMemory);
+
+    // Also try a large value that, when added to current offset, would overflow
+    const result2 = alloc.alloc(u8, std.math.maxInt(usize) - 8);
+    try std.testing.expect(result2 == error.OutOfMemory);
+}
+
 test "Arena preset sizes" {
     // Verify presets can allocate up to their stated capacity
     var a4k = Arena4K.init();

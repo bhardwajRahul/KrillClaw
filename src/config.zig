@@ -91,6 +91,20 @@ pub fn applyCli(config: *types.Config, allocator: std.mem.Allocator) !?[]const u
         } else if (std.mem.eql(u8, arg, "--ble-device")) {
             config.ble_device = args.next();
             config.transport = .ble;
+        } else if (std.mem.eql(u8, arg, "--cron-interval")) {
+            if (args.next()) |val| {
+                config.cron_interval = std.fmt.parseInt(u32, val, 10) catch 0;
+            }
+        } else if (std.mem.eql(u8, arg, "--cron-prompt")) {
+            config.cron_prompt = args.next() orelse config.cron_prompt;
+        } else if (std.mem.eql(u8, arg, "--heartbeat")) {
+            if (args.next()) |val| {
+                config.heartbeat_interval = std.fmt.parseInt(u32, val, 10) catch 0;
+            }
+        } else if (std.mem.eql(u8, arg, "--cron-max-runs")) {
+            if (args.next()) |val| {
+                config.cron_max_runs = std.fmt.parseInt(u32, val, 10) catch 0;
+            }
         } else if (arg[0] != '-') {
             prompt = arg;
         }
@@ -167,6 +181,10 @@ pub fn printHelp() void {
         \\  --transport TYPE        http, ble, or serial
         \\  --serial-port PATH      Serial port (e.g. /dev/ttyUSB0)
         \\  --ble-device ADDR       BLE device address
+        \\  --cron-interval SECS    Run agent every N seconds (daemon mode)
+        \\  --cron-prompt TEXT      Prompt for cron runs (default: heartbeat check)
+        \\  --cron-max-runs N       Stop after N cron runs (0 = unlimited)
+        \\  --heartbeat SECS        Log heartbeat every N seconds
         \\  -v, --version           Show version
         \\  -h, --help              Show this help
         \\

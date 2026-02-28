@@ -1,3 +1,4 @@
 anthropic>=0.40.0
 bleak>=0.21.0
 pyserial>=3.5
+# Telegram transport: no additional dependencies (uses stdlib urllib.request)

@@ -3,6 +3,7 @@ const build_options = @import("build_options");
 const types = @import("types.zig");
 const config_mod = @import("config.zig");
 const Agent = @import("agent.zig").Agent;
+const cron = @import("cron.zig");
 
 const VERSION = "0.1.0";
 
@@ -46,6 +47,48 @@ pub fn main() !void {
         var agent = Agent.init(allocator, config);
         defer agent.deinit();
         try agent.run(prompt);
+        return;
+    }
+
+    // Cron/daemon mode
+    if (config.cron_interval > 0 or config.heartbeat_interval > 0) {
+        var sched = cron.Scheduler.init(.{
+            .interval_s = config.cron_interval,
+            .prompt = config.cron_prompt,
+            .heartbeat_s = config.heartbeat_interval,
+            .max_runs = config.cron_max_runs,
+        });
+
+        try stdout.print("{s}[cron]{s} Starting scheduler", .{ Color.cyan, Color.reset });
+        if (config.cron_interval > 0) {
+            try stdout.print(" (agent every {d}s)", .{config.cron_interval});
+        }
+        if (config.heartbeat_interval > 0) {
+            try stdout.print(" (heartbeat every {d}s)", .{config.heartbeat_interval});
+        }
+        if (config.cron_max_runs > 0) {
+            try stdout.print(" (max {d} runs)", .{config.cron_max_runs});
+        }
+        try stdout.print("\n", .{});
+
+        while (!sched.isComplete()) {
+            if (sched.shouldHeartbeat()) {
+                sched.emitHeartbeat();
+            }
+
+            if (sched.shouldRunAgent()) {
+                try stdout.print("\n{s}[cron]{s} Run #{d}\n", .{ Color.cyan, Color.reset, sched.run_count });
+                var agent = Agent.init(allocator, config);
+                defer agent.deinit();
+                agent.run(sched.getCronPrompt()) catch |err| {
+                    try stdout.print("{s}[cron] Agent error: {}{s}\n", .{ Color.yellow, err, Color.reset });
+                };
+            }
+
+            sched.sleepUntilNext();
+        }
+
+        try stdout.print("{s}[cron]{s} Complete ({d} runs)\n", .{ Color.cyan, Color.reset, sched.run_count });
         return;
     }
 
@@ -112,12 +155,12 @@ fn printBanner(w: anytype, config: types.Config) !void {
 
     try w.print(
         \\
-        \\{s} __   __        _         ___  _
-        \\ \ \ / /___  __| |_ ___  / __|| | __ ___ __ __
-        \\  \ V // _ \/ _|  _/ _ \| (__ | |/ _` \ V  V /
-        \\   |_| \___/\__|\__\___/ \___||_|\__,_|\_/\_/
+        \\{s}  _  __     _ _ _  ___ _
+        \\ | |/ /_ _ (_) | |/ __| | __ ___ __ __
+        \\ | ' <| '_|| | | | (__| |/ _` \ V  V /
+        \\ |_|\_\_|  |_|_|_|\___|_|\__,_|\_/\_/
         \\{s}
-        \\ {s}v{s} — the world's smallest coding agent{s}
+        \\ {s}v{s} — the world's smallest AI agent runtime{s}
         \\
         \\ Provider: {s}  Model: {s}
         \\ Commands: /help /quit /model <name> /provider <name>
@@ -144,6 +187,8 @@ test {
     _ = @import("config.zig");
     _ = @import("transport.zig");
     _ = @import("arena.zig");
+    _ = @import("cron.zig");
+    _ = @import("tools_shared.zig");
     if (build_options.enable_ble) {
         _ = @import("ble.zig");
     }

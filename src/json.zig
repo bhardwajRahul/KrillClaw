@@ -437,6 +437,24 @@ test "unescape sequences" {
     try std.testing.expectEqualStrings("back\\slash", r4);
 }
 
+test "writeEscaped handles all special chars" {
+    // Regression test: ensure writeEscaped handles quotes, backslashes,
+    // newlines, carriage returns, tabs, and control characters.
+    const alloc = std.testing.allocator;
+    var buf: std.ArrayList(u8) = .{};
+    defer buf.deinit(alloc);
+    const w = buf.writer(alloc);
+
+    try writeEscaped(w, "hello\"world\\foo\nbar\rtab\there");
+    const result = buf.items;
+    try std.testing.expectEqualStrings("hello\\\"world\\\\foo\\nbar\\rtab\\there", result);
+
+    // Test control character (e.g., 0x01)
+    buf.clearRetainingCapacity();
+    try writeEscaped(w, &.{0x01});
+    try std.testing.expectEqualStrings("\\u0001", buf.items);
+}
+
 test "buildClaudeRequest basic" {
     const alloc = std.testing.allocator;
     var content = [_]types.ContentBlock{.{

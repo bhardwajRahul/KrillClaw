@@ -1,12 +1,12 @@
 #!/bin/bash
-# YoctoClaw Comprehensive Smoke Test Suite
+# KrillClaw Comprehensive Smoke Test Suite
 # Usage: cd ~/TinyDancer && bash test/smoke-test.sh
 set -o pipefail
 
 PASS=0
 FAIL=0
 SKIP=0
-BINARY="./zig-out/bin/yoctoclaw"
+BINARY="./zig-out/bin/krillclaw"
 
 pass() { echo "  ✅ PASS: $1"; PASS=$((PASS + 1)); }
 fail() { echo "  ❌ FAIL: $1 — $2"; FAIL=$((FAIL + 1)); }
@@ -189,14 +189,14 @@ section "5. CONFIG / CLI TESTS"
 # ─────────────────────────────────────────
 
 # 5a. --help
-if "$BINARY" --help 2>&1 | grep -q "YoctoClaw"; then
+if "$BINARY" --help 2>&1 | grep -q "KrillClaw"; then
     pass "--help output"
 else
     fail "--help" "missing expected text"
 fi
 
 # 5b. --version
-if "$BINARY" --version 2>&1 | grep -q "yoctoclaw 0.1.0"; then
+if "$BINARY" --version 2>&1 | grep -q "krillclaw 0.1.0"; then
     pass "--version output"
 else
     fail "--version" "missing version string"

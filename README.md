@@ -8,9 +8,9 @@
 <p align="center">
   <a href="https://github.com/krillclaw/KrillClaw/actions"><img src="https://img.shields.io/github/actions/workflow/status/krillclaw/KrillClaw/test.yml?branch=main&style=flat-square&label=CI" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-BSL_1.1-blue?style=flat-square" alt="License: BSL 1.1"></a>
-  <img src="https://img.shields.io/badge/language-Zig_0.13+-f7a41d?style=flat-square&logo=zig&logoColor=white" alt="Zig 0.13+">
+  <img src="https://img.shields.io/badge/language-Zig_0.15+-f7a41d?style=flat-square&logo=zig&logoColor=white" alt="Zig 0.15+">
   <img src="https://img.shields.io/github/languages/code-size/krillclaw/KrillClaw?style=flat-square&color=green" alt="Code size">
-  <img src="https://img.shields.io/badge/binary-~180KB-00ff88?style=flat-square" alt="Binary size">
+  <img src="https://img.shields.io/badge/binary-~450KB-00ff88?style=flat-square" alt="Binary size">
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="Zero deps">
 </p>
 
@@ -25,17 +25,17 @@
 
 ---
 
-59KB binary. 0 dependencies. 17 source files. Runs on a $3 microcontroller or a cloud server.
+~450KB binary. 0 dependencies. 19 source files. 50+ validated device targets. Runs on a $3 microcontroller or a cloud server.
 
-KrillClaw is an autonomous AI agent runtime written in Zig. It connects to any LLM (Claude, OpenAI, Ollama), executes tools, and loops until the task is done — in under 200KB of compiled code.
+KrillClaw is an autonomous AI agent runtime written in Zig. It connects to 16 LLM providers (Claude, OpenAI, Ollama + 13 via `--base-url`), executes tools, and loops until the task is done. Includes cron scheduling, persistent KV store, and BLE/Serial transports for edge devices.
 
 ```
  ┌──────────────────────────────────────────────────────┐
  │                                                      │
- │   ~180 KB.  Zero deps.  Boots in <10ms.              │
+ │   ~450 KB.  Zero deps.  Boots in <10ms.              │
  │   The entire agent runtime — LLM client, tool        │
- │   executor, JSON parser, SSE streaming, context      │
- │   management — in 3,873 lines of Zig.                │
+ │   executor, JSON parser, SSE streaming, cron,        │
+ │   KV store, context mgmt — in 4,576 lines of Zig.   │
  │                                                      │
  └──────────────────────────────────────────────────────┘
 ```
@@ -43,7 +43,7 @@ KrillClaw is an autonomous AI agent runtime written in Zig. It connects to any L
 ## Quick Start
 
 ```bash
-# 1. Install Zig 0.13+ → https://ziglang.org/download/
+# 1. Install Zig 0.15+ → https://ziglang.org/download/
 # 2. Clone and build (takes ~1 second)
 git clone https://github.com/krillclaw/KrillClaw.git
 cd KrillClaw
@@ -68,24 +68,25 @@ KrillClaw proves it doesn't. The same agentic loop that powers desktop tools, co
 
 | | KrillClaw | Typical Edge Runtime | Desktop Agent |
 |---|:---:|:---:|:---:|
-| **Binary** | **~180 KB** | 2–8 MB | 50–500 MB |
+| **Binary** | **~450 KB** | 2–8 MB | 50–500 MB |
 | **RAM** | **~2 MB** | 10–512 MB | 150 MB – 1 GB |
-| **Source** | **3,873 LOC** | 5–30K LOC | 30–100K+ LOC |
+| **Source** | **4,576 LOC** | 5–30K LOC | 30–100K+ LOC |
 | **Dependencies** | **0** | 10–100+ | 100–1000+ |
 | **Boot time** | **<10 ms** | <1s | 2–5s |
 | **Embedded/BLE** | **Yes** | Sometimes | No |
+| **Cron/Daemon** | **Yes** | Sometimes | No |
 
 ### vs Embedded/Edge Runtimes
 
 | Feature | KrillClaw | MimiClaw | PicoClaw |
 |---------|:---------:|:--------:|:--------:|
 | **Language** | Zig | Python | Go |
-| **Binary size** | ~180 KB | ~2 MB | ~8 MB |
+| **Binary size** | ~450 KB | ~2 MB | ~8 MB |
 | **RAM usage** | ~2 MB | ~512 KB* | ~10 MB |
 | **Dependencies** | 0 | pip | Go modules |
 | **BLE transport** | ✅ | ❌ | ❌ |
 | **Serial transport** | ✅ | ❌ | ❌ |
-| **Multi-provider** | 3 (Claude, OpenAI, Ollama) | 1 | 1 |
+| **Multi-provider** | 16 (Claude, OpenAI, Ollama + 13 via `--base-url`) | 1 | 1 |
 | **SSE streaming** | ✅ | ❌ | ❌ |
 | **Inline tests** | 39 | 0 | Limited |
 | **Sandbox mode** | ✅ | ❌ | ❌ |
@@ -121,29 +122,31 @@ KrillClaw proves it doesn't. The same agentic loop that powers desktop tools, co
 │           types.zig │ arena.zig                              │
 └─────────────────────────────────────────────────────────────┘
 
-17 files. 3,873 lines. Zero dependencies.
+19 files. 4,576 lines. Zero dependencies.
 ```
 
 ### Source Map
 
 | File | Lines | Role |
 |------|------:|------|
-| `main.zig` | 153 | CLI, REPL, entry point |
+| `main.zig` | 198 | CLI, REPL, cron daemon entry point |
 | `agent.zig` | 215 | Agent loop + FNV-1a stuck-loop detection |
 | `api.zig` | 341 | Multi-provider HTTP client (Claude/OpenAI/Ollama) |
 | `stream.zig` | 362 | SSE streaming parser |
-| `json.zig` | 501 | Hand-rolled JSON parser/builder — zero deps |
-| `tools.zig` | 183 | Tool dispatcher — comptime profile selection |
-| `tools_coding.zig` | 447 | Coding profile: bash, read/write/edit, search, list, patch |
-| `tools_iot.zig` | 241 | IoT profile: MQTT, HTTP, KV store, device info |
+| `json.zig` | 519 | Hand-rolled JSON parser/builder — zero deps |
+| `tools.zig` | 191 | Tool dispatcher — comptime profile + shared tools |
+| `tools_shared.zig` | 362 | Shared tools: time, KV, web search, sessions, OTA (all profiles) |
+| `tools_coding.zig` | 484 | Coding profile: bash, read/write/edit, search, list, patch |
+| `tools_iot.zig` | 176 | IoT profile: MQTT, HTTP, device info |
 | `tools_robotics.zig` | 153 | Robotics profile: commands, e-stop, telemetry |
 | `context.zig` | 226 | Token estimation + priority-based truncation |
-| `config.zig` | 184 | Config: file → env → CLI precedence |
-| `transport.zig` | 129 | Abstract vtable transport + RPC protocol |
-| `types.zig` | 151 | Core types: Provider, Message, Config, ToolDef |
+| `config.zig` | 202 | Config: file → env → CLI precedence |
+| `cron.zig` | 206 | Cron/heartbeat scheduler for daemon mode |
+| `transport.zig` | 179 | Abstract vtable transport + RPC protocol |
+| `types.zig` | 157 | Core types: Provider, Message, Config, ToolDef |
 | `ble.zig` | 159 | BLE GATT transport (protocol + simulation) |
 | `serial.zig` | 142 | UART/serial transport (Linux/macOS) |
-| `arena.zig` | 182 | Fixed arena allocator for embedded targets |
+| `arena.zig` | 200 | Fixed arena allocator for embedded targets |
 | `react.zig` | 104 | ReAct reasoning loop |
 
 ## Profiles
@@ -163,19 +166,43 @@ zig build -Dprofile=robotics -Doptimize=ReleaseSmall
 
 | Profile | Tools | Binary Size | Security Policy |
 |---------|-------|:-----------:|-----------------|
-| **coding** | bash, read/write/edit, search, list, patch | ~180 KB | bash behind approval gate, writes restricted to cwd |
-| **iot** | MQTT pub/sub, HTTP, KV store, device info | ~150 KB | no bash, no file writes, 30 req/min rate limit |
-| **robotics** | robot_cmd, estop, telemetry | ~160 KB | no bash, bounds checking, 10 cmd/s, e-stop |
+| **coding** | bash, read/write/edit, search, list, patch + shared | ~459 KB | bash behind approval gate, writes restricted to cwd |
+| **iot** | MQTT pub/sub, HTTP, device info + shared | ~448 KB | no bash, no file writes, 30 req/min rate limit |
+| **robotics** | robot_cmd, estop, telemetry + shared | ~473 KB | no bash, bounds checking, 10 cmd/s, e-stop |
+
+All profiles include **shared tools** available across every profile:
+- `get_current_time` — ISO-8601 timestamp
+- `kv_get` / `kv_set` / `kv_list` / `kv_delete` — persistent key-value store
 
 All profiles support sandbox mode: `zig build -Dsandbox=true`
 
+## Cron / Heartbeat (Daemon Mode)
+
+Run KrillClaw as a scheduled agent on edge devices:
+
+```bash
+# Run agent every 5 minutes with a custom prompt
+krillclaw --cron-interval 300 --cron-prompt "check sensors and report anomalies"
+
+# Heartbeat every 60 seconds + agent every 10 minutes
+krillclaw --heartbeat 60 --cron-interval 600
+
+# Run 10 times then exit
+krillclaw --cron-interval 120 --cron-max-runs 10 --cron-prompt "collect data"
+```
+
+Designed for edge devices running data collection cycles between connectivity windows (BLE, Serial). The scheduler has minimal binary cost (~2KB) and uses no threads.
+
 ## Providers
+
+KrillClaw supports **16 LLM providers** through three protocol backends. Any provider with an OpenAI-compatible API works via `--base-url`.
 
 | Provider | Models | Auth |
 |----------|--------|------|
 | **Claude** | claude-sonnet-4-5, claude-opus-4, etc. | `ANTHROPIC_API_KEY` |
 | **OpenAI** | gpt-4o, gpt-4-turbo, etc. | `OPENAI_API_KEY` |
 | **Ollama** | llama3, codellama, mistral, etc. | None (local) |
+| **+ 13 more** | via `--base-url` | Provider-specific |
 
 ```bash
 # Claude (default)
@@ -187,7 +214,30 @@ export OPENAI_API_KEY=sk-...
 
 # Local Ollama
 ./zig-out/bin/krillclaw --provider ollama -m llama3 "explain this code"
+
+# Groq (ultra-fast inference)
+KRILLCLAW_API_KEY=gsk_... ./zig-out/bin/krillclaw \
+  --provider openai --base-url https://api.groq.com/openai \
+  -m llama-3.3-70b-versatile "optimize this function"
+
+# DeepSeek (cost-effective coding)
+KRILLCLAW_API_KEY=sk-... ./zig-out/bin/krillclaw \
+  --provider openai --base-url https://api.deepseek.com \
+  -m deepseek-chat "refactor this module"
+
+# Together AI (open-source models)
+KRILLCLAW_API_KEY=... ./zig-out/bin/krillclaw \
+  --provider openai --base-url https://api.together.xyz \
+  -m meta-llama/Llama-3.1-70B-Instruct-Turbo "write tests"
+
+# Google Gemini (via OpenAI compatibility layer)
+KRILLCLAW_API_KEY=... ./zig-out/bin/krillclaw \
+  --provider openai \
+  --base-url https://generativelanguage.googleapis.com/v1beta/openai \
+  -m gemini-2.0-flash "summarize this repo"
 ```
+
+See [Docs/PROVIDERS.md](Docs/PROVIDERS.md) for the full list of 16 supported providers with base URLs, tool calling support, and configuration examples.
 
 ## Embedded Mode
 
@@ -324,14 +374,14 @@ See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
 - **JSON parser is flat** — finds first matching key at any depth (works for LLM API responses where keys are unambiguous)
 - **Token estimation is heuristic** — ~4 chars/token approximation, not billing-accurate
-- **No conversation persistence** — sessions start fresh, context is in-memory only
+- **No conversation persistence** — sessions start fresh (use KV store for data that should survive restarts)
 - **BLE transport is protocol-only** — real hardware needs platform BLE SDK linking
 - **Serial baud uses `stty`** — Linux/macOS only
-- **Requires Zig 0.13+**
+- **Requires Zig 0.15+**
 
 ## License
 
-[BSL 1.1](LICENSE) — Business Source License. Converts to Apache 2.0 after 4 years (Change Date: 2029-02-17).
+[BSL 1.1](LICENSE) — Business Source License. Converts to Apache 2.0 after 3 years (Change Date: 2029-02-17).
 
 KrillClaw is **source-available**, not open source. You can read, build, and modify the code. Commercial use above the license thresholds requires a commercial license. See [LICENSE](LICENSE) for full terms.
 

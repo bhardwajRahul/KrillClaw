@@ -1,7 +1,9 @@
 //! Tool dispatcher — selects profile at comptime via build_options.
+//! Shared tools (get_current_time, kv_*) are available across all profiles.
 const std = @import("std");
 const types = @import("types.zig");
 const build_options = @import("build_options");
+const shared = @import("tools_shared.zig");
 
 const profile_mod = switch (build_options.profile) {
     .coding => @import("tools_coding.zig"),
@@ -10,10 +12,16 @@ const profile_mod = switch (build_options.profile) {
 };
 
 pub const ToolResult = profile_mod.ToolResult;
-pub const tool_definitions = profile_mod.tool_definitions;
 
-/// Execute a tool call — delegates to the active profile.
+/// Combined tool definitions: profile-specific + shared tools.
+pub const tool_definitions = profile_mod.tool_definitions ++ shared.tool_definitions;
+
+/// Execute a tool call — tries shared tools first, then delegates to profile.
 pub fn execute(allocator: std.mem.Allocator, tool: types.ToolUse) ToolResult {
+    // Shared tools available to all profiles
+    if (shared.tryExecute(allocator, tool)) |result| {
+        return .{ .output = result.output, .is_error = result.is_error };
+    }
     return profile_mod.execute(allocator, tool);
 }
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# YoctoClaw Embedded/QEMU Test Script
+# KrillClaw Embedded/QEMU Test Script
 # Tests cross-compilation for embedded targets and documents QEMU testing.
 #
 # Prerequisites:
@@ -22,7 +22,7 @@ cd "$(dirname "$0")/.." || exit 1
 REPO=$(pwd)
 
 echo "═══════════════════════════════════════"
-echo "  YoctoClaw Embedded / QEMU Tests"
+echo "  KrillClaw Embedded / QEMU Tests"
 echo "═══════════════════════════════════════"
 echo ""
 
@@ -33,7 +33,7 @@ echo ""
 echo "--- ARM Linux (aarch64) ---"
 
 if zig build -Dtarget=aarch64-linux -Dprofile=iot -Doptimize=ReleaseSmall 2>&1; then
-    BINARY="./zig-out/bin/yoctoclaw"
+    BINARY="./zig-out/bin/krillclaw"
     SIZE=$(stat -f%z "$BINARY" 2>/dev/null || stat --printf="%s" "$BINARY" 2>/dev/null || echo 0)
     echo "  aarch64-linux IoT binary: $SIZE bytes ($(( SIZE / 1024 ))KB)"
     pass "cross-compile aarch64-linux IoT"
@@ -84,7 +84,7 @@ fi
 echo ""
 echo "--- Freestanding ARM (bare-metal attempt) ---"
 echo "  NOTE: Freestanding builds require no OS syscalls."
-echo "  YoctoClaw uses std.http and std.fs, so true bare-metal"
+echo "  KrillClaw uses std.http and std.fs, so true bare-metal"
 echo "  requires a HAL abstraction layer (future work)."
 
 if zig build -Dtarget=aarch64-freestanding -Dembedded=true -Dprofile=iot -Doptimize=ReleaseSmall 2>&1; then
@@ -107,7 +107,7 @@ if command -v qemu-aarch64 &>/dev/null || command -v qemu-aarch64-static &>/dev/
 
     # Test --version via QEMU user-mode emulation
     OUTPUT=$($QEMU "$BINARY" --version 2>&1 || true)
-    if echo "$OUTPUT" | grep -q "yoctoclaw"; then
+    if echo "$OUTPUT" | grep -q "krillclaw"; then
         pass "QEMU aarch64: --version works"
     else
         fail "QEMU aarch64: --version" "$OUTPUT"
@@ -115,7 +115,7 @@ if command -v qemu-aarch64 &>/dev/null || command -v qemu-aarch64-static &>/dev/
 
     # Test --help
     OUTPUT=$($QEMU "$BINARY" --help 2>&1 || true)
-    if echo "$OUTPUT" | grep -q "YoctoClaw"; then
+    if echo "$OUTPUT" | grep -q "KrillClaw"; then
         pass "QEMU aarch64: --help works"
     else
         fail "QEMU aarch64: --help" "no output"
@@ -128,8 +128,8 @@ else
     echo "    Ubuntu: sudo apt install qemu-user-static"
     echo ""
     echo "  Then run ARM binaries directly:"
-    echo "    qemu-aarch64 ./zig-out/bin/yoctoclaw --version"
-    echo "    qemu-aarch64 ./zig-out/bin/yoctoclaw --help"
+    echo "    qemu-aarch64 ./zig-out/bin/krillclaw --version"
+    echo "    qemu-aarch64 ./zig-out/bin/krillclaw --help"
 fi
 
 # ─────────────────────────────────────────
@@ -145,12 +145,12 @@ cat << 'GUIDE'
 
   Raspberry Pi (ARM64):
     1. Cross-compile: zig build -Dtarget=aarch64-linux -Dprofile=iot -Doptimize=ReleaseSmall
-    2. Copy: scp zig-out/bin/yoctoclaw pi@<ip>:~/
-    3. Run: ssh pi@<ip> './yoctoclaw --version'
+    2. Copy: scp zig-out/bin/krillclaw pi@<ip>:~/
+    3. Run: ssh pi@<ip> './krillclaw --version'
 
   ESP32 / STM32 (future — requires HAL):
     - Zig can target these via: -Dtarget=thumb-freestanding
-    - But YoctoClaw needs HTTP stack replacement (no std.http)
+    - But KrillClaw needs HTTP stack replacement (no std.http)
     - Would need: embedded HTTP client, flash filesystem, UART transport
     - The -Dembedded=true flag + -Dtransport=serial is the starting point
 
@@ -159,14 +159,14 @@ cat << 'GUIDE'
     qemu-system-aarch64 \
       -M virt -cpu cortex-a57 -m 256M \
       -kernel <linux-kernel-image> \
-      -initrd <initramfs-with-yoctoclaw> \
+      -initrd <initramfs-with-krillclaw> \
       -nographic -append "console=ttyAMA0"
 
     # For quick tests, user-mode is much simpler:
-    qemu-aarch64 ./zig-out/bin/yoctoclaw --help
+    qemu-aarch64 ./zig-out/bin/krillclaw --help
 
   RISC-V:
-    qemu-riscv64 ./zig-out/bin/yoctoclaw --help
+    qemu-riscv64 ./zig-out/bin/krillclaw --help
 
 GUIDE
 

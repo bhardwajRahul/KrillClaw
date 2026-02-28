@@ -40,7 +40,7 @@ TinyDancer/
 │   └── assets/             # PNG images
 ├── test/
 │   ├── smoke-test.sh       # --version, --help, basic CLI checks
-│   ├── integration.sh      # End-to-end with mock API (⚠️ still references yoctoclaw)
+│   ├── integration.sh      # End-to-end with mock API
 │   └── qemu-embedded-test.sh # Cross-compile + QEMU user-mode tests
 ├── Docs/                   # Strategy, marketing, launch docs
 │   ├── ROADMAP.md          # Version roadmap (v0.1 → v1.0)
@@ -53,12 +53,12 @@ TinyDancer/
 │   ├── test.yml            # CI: build, test, size gate (<300KB), cross-compile
 │   └── deploy.yml          # Cloudflare Pages deploy on push to main (site/ dir)
 ├── build.zig               # Build system
-├── build.zig.zon           # Package manifest (⚠️ still says .name = .yoctoclaw)
+├── build.zig.zon           # Package manifest
 ├── LICENSE                 # BSL 1.1 → Apache 2.0 after 3 years
 ├── README.md, CHANGELOG.md, SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md
 └── zig-out/bin/
     ├── krillclaw-lite       # 52KB — lite profile build artifact
-    └── yoctoclaw            # 3.4MB — debug build artifact (stale name)
+    └── krillclaw            # Debug build artifact
 ```
 
 ---
@@ -152,7 +152,7 @@ What it does:
 3. If `qemu-aarch64` is installed, runs `--version` and `--help` via QEMU user-mode
 4. Prints hardware testing guide for RPi, ESP32, RISC-V
 
-**Status:** These tests have NOT been run on this machine (no QEMU installed). They're designed for CI or a Linux box. The script still references `yoctoclaw` binary name and version string.
+**Status:** These tests have NOT been run on this machine (no QEMU installed). They're designed for CI or a Linux box.
 
 **No actual "350+ edge devices" testing exists.** That's marketing copy on the website.
 
@@ -165,20 +165,15 @@ What it does:
 - **License discrepancy:** README says "4-year conversion", LICENSE/commit say "3-year conversion"
 - **README says 39 tests, website says 40** — neither is verified against current `zig build test` count
 
-### Rename Incomplete (YoctoClaw → KrillClaw)
-Files still containing `yoctoclaw`/`YoctoClaw`:
-- `build.zig.zon` — `.name = .yoctoclaw`
-- `test/integration.sh` — references `yoctoclaw` binary + version string
-- `test/smoke-test.sh` — references `yoctoclaw`
-- `test/qemu-embedded-test.sh` — references `yoctoclaw` throughout
-- `bridge/bridge/bridge.py` — socket path `/tmp/yoctoclaw.sock`
-
-Files renamed correctly:
-- `build.zig` — binary name is `krillclaw`
-- `src/*.zig` — all source files use KrillClaw
+### Rename Complete (YoctoClaw → KrillClaw)
+All files have been renamed to use KrillClaw/krillclaw consistently:
+- `build.zig` and `build.zig.zon`
+- `src/*.zig` — all source files
+- `test/*.sh` — all test scripts
+- `bridge/bridge/bridge.py` — class name, socket path, log path
 - `README.md`, `CHANGELOG.md`, all Docs/
 - `site/index.html` and other website files
-- `.github/workflows/deploy.yml` — project name `krillclaw`
+- `.github/workflows/deploy.yml`
 
 ### Source Code TODOs
 1. `src/ble.zig:37` — Multi-packet BLE response reassembly not implemented (single-frame only)
@@ -187,7 +182,7 @@ Files renamed correctly:
 4. `bridge/bridge/bridge.py:183` — `handle_estop` needs real motor controller stop
 
 ### Other Debt
-- `zig-out/bin/yoctoclaw` — stale 3.4MB debug binary (should delete, it's gitignored)
+- `zig-out/bin/` — stale debug binaries may exist (gitignored)
 - Bridge path is `bridge/bridge/bridge.py` (double-nested) but README says `cd bridge && python bridge.py`
 - Ollama streaming disabled — SSE format compatibility not fully implemented
 - 7 git stashes on various feature branches (see §6)
@@ -280,7 +275,7 @@ Dispatches to handlers: `mqtt_publish`, `mqtt_subscribe`, `http_request`, `robot
 ```bash
 python bridge.py --transport ble    # BLE central
 python bridge.py --transport serial --port /dev/ttyUSB0
-python bridge.py --transport socket  # Unix socket at /tmp/yoctoclaw.sock
+python bridge.py --transport socket  # Unix socket at /tmp/krillclaw.sock
 ```
 Uses `anthropic` Python SDK, default model `claude-sonnet-4-5-20250929`. Reads from transport, sends to Claude API, writes response back.
 
@@ -290,7 +285,7 @@ Uses `anthropic` Python SDK, default model `claude-sonnet-4-5-20250929`. Reads f
 - RX: `0000pc03-...`
 
 ### Issues
-- Socket path hardcoded to `/tmp/yoctoclaw.sock` (needs rename)
+- Socket path: `/tmp/krillclaw.sock`
 - `robot_cmd` and `estop` are stubs
 - No error handling for BLE disconnects
 - Uses old Anthropic model name
@@ -315,7 +310,7 @@ Uses `anthropic` Python SDK, default model `claude-sonnet-4-5-20250929`. Reads f
 
 8. **To test with Ollama** (free, no API key): `ollama serve` then `zig build run -- --provider ollama --model llama3.2 "hello"`. Streaming is disabled for Ollama.
 
-9. **The `yoctoclaw-store/` directory** is an e-commerce experiment (Snipcart/Stripe integration mockup). Not part of the main product. Appears gitignored.
+9. **The `krillclaw-store/` directory** (formerly `yoctoclaw-store/`) is an e-commerce experiment (Snipcart/Stripe integration mockup). Not part of the main product. Appears gitignored.
 
 10. **No project-level CLAUDE.md exists.** If you want to set one up for the new session, create `TinyDancer/CLAUDE.md` with project-specific instructions.
 
@@ -323,7 +318,7 @@ Uses `anthropic` Python SDK, default model `claude-sonnet-4-5-20250929`. Reads f
 
 12. **The CI workflow (`test.yml`) uses Zig 0.13.0.** Some feature branches have 0.15 compatibility work. If you upgrade Zig, check for breaking changes in `std.http` and allocator APIs.
 
-13. **Binary in `zig-out/bin/yoctoclaw` is 3.4MB** — that's a debug build. Don't be alarmed. Release builds are 52KB (lite) to ~180KB (full).
+13. **Debug binaries in `zig-out/bin/` can be 3.4MB** — that's expected for debug builds. Release builds are 52KB (lite) to ~180KB (full).
 
 ---
 
@@ -340,7 +335,7 @@ ls -la zig-out/bin/krillclaw  # Check binary size
 ```
 
 ### Priority TODO for Next Session
-1. Finish YoctoClaw → KrillClaw rename (build.zig.zon, test scripts, bridge.py socket path)
+1. ~~Finish YoctoClaw → KrillClaw rename~~ (DONE)
 2. Reconcile website claims with reality (especially "17+ providers" and "350+ devices")
 3. Verify security audit fixes are on main (especially stash 6 auth_buf fix)
 4. Push `feature/ci-testing` branch to enable GitHub Actions
