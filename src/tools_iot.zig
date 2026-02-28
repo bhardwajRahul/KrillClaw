@@ -23,6 +23,15 @@ pub const tool_definitions = [_]types.ToolDef{
     .{ .name = "device_info", .description = "Get device information and status.", .input_schema =
         \\{"type":"object","properties":{},"required":[]}
     },
+    .{ .name = "gpio_read", .description = "Read a GPIO pin value.", .input_schema =
+        \\{"type":"object","properties":{"pin":{"type":"integer"}},"required":["pin"]}
+    },
+    .{ .name = "gpio_write", .description = "Write a value to a GPIO pin.", .input_schema =
+        \\{"type":"object","properties":{"pin":{"type":"integer"},"value":{"type":"integer"}},"required":["pin","value"]}
+    },
+    .{ .name = "gpio_list", .description = "List available GPIO pins.", .input_schema =
+        \\{"type":"object","properties":{},"required":[]}
+    },
 };
 
 /// Rate limiter: max 30 bridge calls per minute
@@ -77,6 +86,27 @@ pub fn execute(allocator: std.mem.Allocator, tool: types.ToolUse) ToolResult {
         w.writeAll("{\"action\":\"mqtt_subscribe\",\"topic\":\"") catch return .{ .output = "JSON build error", .is_error = true };
         json.writeEscaped(w, topic) catch return .{ .output = "JSON build error", .is_error = true };
         w.print("\",\"timeout_ms\":{d}}}", .{timeout}) catch return .{ .output = "JSON build error", .is_error = true };
+        const bridge_json = buf.toOwnedSlice(allocator) catch return .{ .output = "JSON build error", .is_error = true };
+        return bridgeCall(allocator, bridge_json);
+    }
+
+    // GPIO tools — route directly to bridge
+    if (std.mem.eql(u8, tool.name, "gpio_read") or
+        std.mem.eql(u8, tool.name, "gpio_write") or
+        std.mem.eql(u8, tool.name, "gpio_list"))
+    {
+        var buf: std.ArrayList(u8) = .{};
+        const w = buf.writer(allocator);
+        w.writeAll("{\"action\":\"") catch return .{ .output = "JSON build error", .is_error = true };
+        w.writeAll(tool.name) catch return .{ .output = "JSON build error", .is_error = true };
+        w.writeAll("\"") catch return .{ .output = "JSON build error", .is_error = true };
+        // Pass through the raw input fields
+        if (tool.input_raw.len > 2) { // More than just "{}"
+            w.writeAll(",") catch return .{ .output = "JSON build error", .is_error = true };
+            // Strip outer braces from input_raw and append
+            w.writeAll(tool.input_raw[1 .. tool.input_raw.len - 1]) catch return .{ .output = "JSON build error", .is_error = true };
+        }
+        w.writeAll("}") catch return .{ .output = "JSON build error", .is_error = true };
         const bridge_json = buf.toOwnedSlice(allocator) catch return .{ .output = "JSON build error", .is_error = true };
         return bridgeCall(allocator, bridge_json);
     }

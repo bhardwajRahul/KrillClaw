@@ -1,11 +1,11 @@
 # Supported LLM Providers
 
-KrillClaw supports **16 LLM providers** through three protocol backends:
+KrillClaw supports **20+ LLM providers** through three protocol backends:
 
 - **Anthropic Claude** — native support via `/v1/messages`
 - **OpenAI** — native support via `/v1/chat/completions`
 - **Ollama** — native support via `/api/chat` (local models)
-- **13 additional providers** — via OpenAI-compatible API using `--base-url`
+- **17+ additional providers** — via OpenAI-compatible API using `--base-url`
 
 ## Usage
 
@@ -49,6 +49,11 @@ These providers support the OpenAI chat completions format including tool/functi
 | **SambaNova** | `https://api.sambanova.ai` | Yes | llama-3.3-70b, llama-3.1-405b |
 | **Azure OpenAI** | `https://{name}.openai.azure.com/openai/deployments/{id}` | Yes | gpt-4o, gpt-4-turbo (per-deployment) |
 | **OpenRouter** | `https://openrouter.ai/api` | Yes | 200+ models across providers |
+| **Perplexity AI** | `https://api.perplexity.ai` | Yes | sonar-pro, sonar, sonar-reasoning |
+| **Cohere** | `https://api.cohere.com/v2` | Yes | command-r-plus, command-r, command |
+| **AI21** | `https://api.ai21.com/studio/v1` | Yes | jamba-1.5-large, jamba-1.5-mini |
+| **Hyperbolic** | `https://api.hyperbolic.xyz/v1` | Yes | llama-3.1-70b, deepseek-v3 |
+| **Lepton AI** | `https://api.lepton.ai/v1` | Yes | llama-3.1-70b, mixtral-8x7b |
 
 ### Tier 2: Local / Self-Hosted
 

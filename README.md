@@ -27,7 +27,7 @@
 
 ~450KB binary. 0 dependencies. 19 source files. 50+ validated device targets. Runs on a $3 microcontroller or a cloud server.
 
-KrillClaw is an autonomous AI agent runtime written in Zig. It connects to 16 LLM providers (Claude, OpenAI, Ollama + 13 via `--base-url`), executes tools, and loops until the task is done. Includes cron scheduling, persistent KV store, and BLE/Serial transports for edge devices.
+KrillClaw is an autonomous AI agent runtime written in Zig. It connects to 20+ LLM providers (Claude, OpenAI, Ollama + 17 via `--base-url`), executes tools, and loops until the task is done. Includes cron scheduling, persistent KV store, MCP support, 7 messaging channels, GPIO/hardware control, and BLE/Serial transports for edge devices.
 
 ```
  ┌──────────────────────────────────────────────────────┐
@@ -86,10 +86,13 @@ KrillClaw proves it doesn't. The same agentic loop that powers desktop tools, co
 | **Dependencies** | 0 | pip | Go modules |
 | **BLE transport** | ✅ | ❌ | ❌ |
 | **Serial transport** | ✅ | ❌ | ❌ |
-| **Multi-provider** | 16 (Claude, OpenAI, Ollama + 13 via `--base-url`) | 1 | 1 |
+| **Multi-provider** | 20+ (Claude, OpenAI, Ollama + 17 via `--base-url`) | 2 | 1 |
 | **SSE streaming** | ✅ | ❌ | ❌ |
-| **Inline tests** | 39 | 0 | Limited |
+| **Inline tests** | 60 | 0 | Limited |
 | **Sandbox mode** | ✅ | ❌ | ❌ |
+| **MCP support** | ✅ | ❌ | ❌ |
+| **Channels** | 7 (Telegram, Discord, Slack, WhatsApp, MQTT, WebSocket, Webhook) | 2 | N/A |
+| **GPIO / hardware** | ✅ (GPIO, I2C, SPI) | ✅ (GPIO) | ❌ |
 | **License** | BSL 1.1 | MIT | MIT |
 
 *Competitor data as of Feb 2026. Check their repos for current numbers.*
@@ -167,7 +170,7 @@ zig build -Dprofile=robotics -Doptimize=ReleaseSmall
 | Profile | Tools | Binary Size | Security Policy |
 |---------|-------|:-----------:|-----------------|
 | **coding** | bash, read/write/edit, search, list, patch + shared | ~459 KB | bash behind approval gate, writes restricted to cwd |
-| **iot** | MQTT pub/sub, HTTP, device info + shared | ~448 KB | no bash, no file writes, 30 req/min rate limit |
+| **iot** | MQTT pub/sub, HTTP, GPIO, I2C, SPI, device info + shared | ~463 KB | no bash, no file writes, 30 req/min rate limit |
 | **robotics** | robot_cmd, estop, telemetry + shared | ~473 KB | no bash, bounds checking, 10 cmd/s, e-stop |
 
 All profiles include **shared tools** available across every profile:
@@ -195,14 +198,14 @@ Designed for edge devices running data collection cycles between connectivity wi
 
 ## Providers
 
-KrillClaw supports **16 LLM providers** through three protocol backends. Any provider with an OpenAI-compatible API works via `--base-url`.
+KrillClaw supports **20+ LLM providers** through three protocol backends. Any provider with an OpenAI-compatible API works via `--base-url`.
 
 | Provider | Models | Auth |
 |----------|--------|------|
 | **Claude** | claude-sonnet-4-5, claude-opus-4, etc. | `ANTHROPIC_API_KEY` |
 | **OpenAI** | gpt-4o, gpt-4-turbo, etc. | `OPENAI_API_KEY` |
 | **Ollama** | llama3, codellama, mistral, etc. | None (local) |
-| **+ 13 more** | via `--base-url` | Provider-specific |
+| **+ 17 more** | via `--base-url` | Provider-specific |
 
 ```bash
 # Claude (default)
@@ -237,7 +240,70 @@ KRILLCLAW_API_KEY=... ./zig-out/bin/krillclaw \
   -m gemini-2.0-flash "summarize this repo"
 ```
 
-See [Docs/PROVIDERS.md](Docs/PROVIDERS.md) for the full list of 16 supported providers with base URLs, tool calling support, and configuration examples.
+See [Docs/PROVIDERS.md](Docs/PROVIDERS.md) for the full list of 20+ supported providers with base URLs, tool calling support, and configuration examples.
+
+## MCP Support
+
+KrillClaw integrates with [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) servers, connecting your agent to 1000+ tools.
+
+```bash
+# Configure MCP servers in ~/.krillclaw/mcp_servers.json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/user"]
+    }
+  }
+}
+
+# Start with MCP tools available
+python bridge/bridge.py --serve --channels webhook
+```
+
+MCP tools are namespaced as `servername__toolname` and automatically available to the agent. Supports stdio and streamable HTTP transports.
+
+## Channels
+
+7 messaging channels — your agent talks wherever your users are:
+
+| Channel | Library | Auth |
+|---------|---------|------|
+| **Telegram** | stdlib (urllib) | Bot token |
+| **Discord** | discord.py | Bot token |
+| **Slack** | slack-bolt | Bot + App token (Socket Mode) |
+| **WhatsApp** | Cloud API (Meta) | Business access token |
+| **MQTT** | paho-mqtt | Broker config |
+| **WebSocket** | websockets | Token auth |
+| **Webhook** | stdlib (http.server) | Bearer token |
+
+```bash
+# Start multi-channel server
+python bridge/bridge.py --serve --channels telegram,discord,webhook
+```
+
+## GPIO / Hardware Control
+
+Direct hardware control from AI — GPIO, I2C, SPI:
+
+```bash
+# IoT profile includes GPIO tools
+zig build -Dprofile=iot -Doptimize=ReleaseSmall
+
+# GPIO tools route through the Python bridge
+# Linux: real hardware via libgpiod
+# macOS: simulator mode (logs commands)
+```
+
+| Tool | Description |
+|------|-------------|
+| `gpio_read` | Read a GPIO pin value |
+| `gpio_write` | Write a value to a GPIO pin |
+| `gpio_list` | List available GPIO pins |
+| `i2c_read` | Read from an I2C device |
+| `spi_transfer` | Transfer data over SPI |
+
+Safety: pin allowlist via `~/.krillclaw/hardware.json`, rate limiting on writes.
 
 ## Embedded Mode
 
