@@ -17,4 +17,3 @@ User-agent: ClaudeBot
 Allow: /
 
 Sitemap: https://krillclaw.com/sitemap.xml
-
