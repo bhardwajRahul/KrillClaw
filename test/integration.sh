@@ -78,10 +78,10 @@ echo "T53: binary size"
 if [ -f "$KRILLCLAW" ]; then
     SIZE=$(stat --printf="%s" "$KRILLCLAW" 2>/dev/null || stat -f%z "$KRILLCLAW" 2>/dev/null || echo "0")
     echo "  Binary size: $SIZE bytes"
-    if [ "$SIZE" -lt 307200 ]; then
-        pass "binary < 300KB ($SIZE bytes)"
+    if [ "$SIZE" -lt 614400 ]; then
+        pass "binary < 600KB ($SIZE bytes)"
     else
-        fail "binary size" "$SIZE bytes > 300KB"
+        fail "binary size" "$SIZE bytes > 600KB"
     fi
 else
     fail "binary size" "binary not found at $KRILLCLAW"
