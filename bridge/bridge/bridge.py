@@ -567,6 +567,26 @@ TOOL_HANDLERS = {
     "ota_apply": handle_ota_apply,
 }
 
+# MCP tool handlers (lazy-loaded)
+try:
+    from mcp_bridge import handle_mcp_call, handle_mcp_list_tools
+    TOOL_HANDLERS["mcp_call"] = handle_mcp_call
+    TOOL_HANDLERS["mcp_list_tools"] = handle_mcp_list_tools
+except ImportError:
+    pass
+
+# Hardware/GPIO tool handlers
+try:
+    from hardware import (handle_gpio_read, handle_gpio_write, handle_gpio_list,
+                          handle_i2c_read, handle_spi_transfer)
+    TOOL_HANDLERS["gpio_read"] = handle_gpio_read
+    TOOL_HANDLERS["gpio_write"] = handle_gpio_write
+    TOOL_HANDLERS["gpio_list"] = handle_gpio_list
+    TOOL_HANDLERS["i2c_read"] = handle_i2c_read
+    TOOL_HANDLERS["spi_transfer"] = handle_spi_transfer
+except ImportError:
+    pass
+
 
 def exec_tool_mode(json_str):
     """Parse JSON command, dispatch to handler, print JSON response."""
@@ -1020,6 +1040,20 @@ async def serve_channels(bridge: "KrillClawBridge", channel_names: list[str], co
     from channels.webhook import WebhookChannel
     from channels.websocket import WebSocketChannel
 
+    # Start MCP bridge if configured
+    mcp_bridge = None
+    try:
+        from mcp_bridge import MCPBridge
+        mcp_bridge = MCPBridge()
+        mcp_bridge.load_config()
+        await mcp_bridge.start()
+        if mcp_bridge.list_tools():
+            logging.info("MCP tools available: %s", mcp_bridge.list_tools())
+    except ImportError:
+        logging.debug("MCP package not available")
+    except Exception:
+        logging.exception("Failed to start MCP bridge")
+
     async def handle_message(msg: IncomingMessage) -> str:
         """Route incoming message through the bridge."""
         msg_payload = json.dumps({
@@ -1045,6 +1079,32 @@ async def serve_channels(bridge: "KrillClawBridge", channel_names: list[str], co
 
     router = MessageRouter(handle_message)
 
+    # Lazy imports for optional channels
+    def _make_discord():
+        from channels.discord import DiscordChannel
+        return DiscordChannel(
+            token=config.get("discord", {}).get("token", os.environ.get("DISCORD_BOT_TOKEN", "")),
+            allowed_guilds=config.get("discord", {}).get("allowed_guilds"),
+            allowed_channels=config.get("discord", {}).get("allowed_channels"),
+        )
+
+    def _make_slack():
+        from channels.slack import SlackChannel
+        return SlackChannel(
+            bot_token=config.get("slack", {}).get("bot_token", os.environ.get("SLACK_BOT_TOKEN", "")),
+            app_token=config.get("slack", {}).get("app_token", os.environ.get("SLACK_APP_TOKEN", "")),
+            allowed_channels=config.get("slack", {}).get("allowed_channels"),
+        )
+
+    def _make_whatsapp():
+        from channels.whatsapp import WhatsAppChannel
+        return WhatsAppChannel(
+            phone_number_id=config.get("whatsapp", {}).get("phone_number_id", os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "")),
+            access_token=config.get("whatsapp", {}).get("access_token", os.environ.get("WHATSAPP_ACCESS_TOKEN", "")),
+            verify_token=config.get("whatsapp", {}).get("verify_token", os.environ.get("WHATSAPP_VERIFY_TOKEN", "krillclaw")),
+            webhook_port=config.get("whatsapp", {}).get("webhook_port", 8081),
+        )
+
     channel_registry = {
         "telegram": lambda: TelegramChannel(
             token=config.get("telegram", {}).get("token", os.environ.get("TELEGRAM_BOT_TOKEN", "")),
@@ -1068,6 +1128,9 @@ async def serve_channels(bridge: "KrillClawBridge", channel_names: list[str], co
             auth_token=config.get("websocket", {}).get("auth_token"),
             agent_binary=config.get("websocket", {}).get("agent_binary", "krillclaw"),
         ),
+        "discord": _make_discord,
+        "slack": _make_slack,
+        "whatsapp": _make_whatsapp,
     }
 
     for name in channel_names:
@@ -1087,6 +1150,8 @@ async def serve_channels(bridge: "KrillClawBridge", channel_names: list[str], co
         logging.info("Shutting down channels...")
     finally:
         await router.stop_all()
+        if mcp_bridge:
+            await mcp_bridge.stop()
 
 
 def main():

@@ -182,7 +182,7 @@ dialog{animation:dialogIn 0.2s ease}
 <div class="feature-card">
 <div class="icon">🧪</div>
 <div class="title">Tested &amp; Leak-Free</div>
-<div class="desc">40 tests, zero memory leaks, CI on every commit. Most embedded AI projects ship with zero tests. We ship with proof.</div>
+<div class="desc">60 tests, zero memory leaks, CI on every commit. Most embedded AI projects ship with zero tests. We ship with proof.</div>
 </div>
 
 
@@ -196,8 +196,18 @@ dialog{animation:dialogIn 0.2s ease}
 </div>
 <div class="feature-card">
 <div class="icon">🌐</div>
-<div class="title">16 LLM Providers</div>
-<div class="desc">Claude, GPT, Gemini, Llama, Qwen, Mistral, and more. Switch providers in one line. Never locked in.</div>
+<div class="title">20+ LLM Providers</div>
+<div class="desc">Claude, GPT, Gemini, Llama, Qwen, Mistral, Perplexity, Cohere, and more. Switch providers in one line. Never locked in.</div>
+</div>
+<div class="feature-card">
+<div class="icon">🔗</div>
+<div class="title">MCP Compatible</div>
+<div class="desc">Connect to 1000+ MCP tool servers. Same protocol as Claude Desktop and Cursor. Your agent plugs into the entire AI ecosystem.</div>
+</div>
+<div class="feature-card">
+<div class="icon">⚡</div>
+<div class="title">7 Channels</div>
+<div class="desc">Telegram, Discord, Slack, WhatsApp, MQTT, WebSocket, Webhook. Your agent talks wherever your users are.</div>
 </div>
 </div>
 </div>
@@ -392,19 +402,21 @@ dialog{animation:dialogIn 0.2s ease}
 <tr><td>Language</td><td class="highlight">Zig</td><td>C</td><td>Go</td><td>Node.js</td></tr>
 <tr><td>Binary size</td><td class="highlight">49 KB / ≤500 KB</td><td>~2 MB</td><td>~8 MB</td><td>~200 MB</td></tr>
 <tr><td>RAM usage</td><td class="highlight">2 MB</td><td>~512 KB</td><td>~10 MB</td><td>~200 MB</td></tr>
-<tr><td>Source</td><td class="highlight">~3,500 LOC</td><td>~7K LOC</td><td>?</td><td>~40K LOC</td></tr>
+<tr><td>Source</td><td class="highlight">~4,800 LOC</td><td>~7K LOC</td><td>?</td><td>~40K LOC</td></tr>
 <tr><td>Dependencies</td><td class="highlight">0</td><td>ESP-IDF</td><td>Go stdlib</td><td>~108 npm</td></tr>
 <tr><td>Target hardware</td><td class="highlight">$3 Microcontroller</td><td>$5 Microcontroller</td><td>$10 LicheeRV</td><td>Pi / VPS / Mac</td></tr>
 <tr><td>Needs OS?</td><td class="highlight">No</td><td class="highlight">No</td><td>Linux</td><td>Linux / macOS</td></tr>
 <tr><td>Memory safety</td><td class="highlight">Yes (Zig)</td><td>No (C)</td><td>Yes (Go GC)</td><td>Yes (JS)</td></tr>
-<tr><td>LLM providers</td><td class="highlight">Any compatible</td><td>Claude + OpenAI</td><td>?</td><td>Multi</td></tr>
+<tr><td>LLM providers</td><td class="highlight">20+ compatible</td><td>Claude + OpenAI</td><td>?</td><td>Multi</td></tr>
 <tr><td>BLE transport</td><td class="highlight">Yes</td><td>No</td><td>No</td><td>No</td></tr>
 <tr><td>Security</td><td class="highlight">✅ Built-in auth</td><td>❌ None</td><td>✅ Sandboxed</td><td>✅ Full</td></tr>
-<tr><td>Channels</td><td class="highlight">8+</td><td>1</td><td>N/A</td><td>8+</td></tr>
+<tr><td>Channels</td><td class="highlight">7</td><td>2</td><td>N/A</td><td>8+</td></tr>
 <tr><td>Memory write</td><td class="highlight">✅</td><td>❌</td><td>✅</td><td>✅</td></tr>
 <tr><td>Media handling</td><td class="highlight">✅ Photos, voice, files</td><td>❌ Dropped</td><td>?</td><td>✅</td></tr>
 <tr><td>Skills / plugins</td><td class="highlight">✅ ClawHub</td><td>❌ None</td><td>❌</td><td>✅</td></tr>
-<tr><td>CI / testing</td><td class="highlight">✅ 40 tests, 0 leaks</td><td>❌ Zero</td><td>?</td><td>✅</td></tr>
+<tr><td>CI / testing</td><td class="highlight">✅ 60 tests, 0 leaks</td><td>❌ Zero</td><td>?</td><td>✅</td></tr>
+<tr><td>MCP support</td><td class="highlight">✅</td><td>❌</td><td>❌</td><td>✅</td></tr>
+<tr><td>GPIO / hardware</td><td class="highlight">✅ GPIO, I2C, SPI</td><td>✅ GPIO</td><td>❌</td><td>❌</td></tr>
 <tr><td>License</td><td class="highlight">BSL 1.1 → Apache 2.0</td><td>MIT</td><td>MIT</td><td>MIT</td></tr>
 </table>
 <div style="margin-top:1.5rem;overflow:hidden;position:relative">
@@ -483,7 +495,7 @@ dialog{animation:dialogIn 0.2s ease}
 </div>
 
 <div class="section">
-<h2>16 files. ~3,500 lines. The entire runtime.</h2>
+<h2>16 files. ~4,800 lines. The entire runtime.</h2>
 <p style="color:#888;margin-bottom:1.5rem">You can read the entire codebase in an hour.</p>
 <pre class="install" style="max-width:550px"><span style="color:#888"># Both profiles</span>
 agent.zig    — core loop (250 lines)
@@ -497,6 +509,59 @@ api.zig      — multi-provider HTTP (329 lines)
 tools_coding.zig — 7 tools (280 lines)</pre>
 <p style="color:#888;margin-top:1rem">Works with any OpenAI-compatible LLM provider. Switch with a flag.</p>
 </div>
+
+<!-- ═══ Interactive Terminal Demos ═══ -->
+<div class="section" id="demos">
+<div style="font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:#00ff88;margin-bottom:8px">See It In Action</div>
+<h2>Before &amp; After <span style="color:#00ff88">KrillClaw</span></h2>
+<p style="color:#888;margin-bottom:2rem">Same hardware. Same sensors. Add an AI brain.</p>
+
+<div id="demo-car" style="margin-bottom:3rem">
+<h3 style="color:#fff;font-size:1rem;margin-bottom:1rem">🚗 The 2018 Car ECU</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+<div>
+<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:#666;margin-bottom:0.5rem">Before — Dumb Sensors</div>
+<div class="term-before-wrap" style="background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:1rem;font-family:monospace;font-size:0.8rem;min-height:180px;color:#666;line-height:1.6"></div>
+</div>
+<div>
+<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:#00ff88;margin-bottom:0.5rem">After — KrillClaw Lite (49KB)</div>
+<div class="term-after-wrap" style="background:#0a0a0a;border:1px solid #00ff8833;border-radius:8px;padding:1rem;font-family:monospace;font-size:0.8rem;min-height:180px;color:#00ff88;line-height:1.6"></div>
+</div>
+</div>
+<div style="text-align:center;margin-top:0.5rem"><button class="term-replay" style="display:none;background:none;border:1px solid #333;color:#666;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:0.7rem">↻ Replay</button></div>
+</div>
+
+<div id="demo-elevator">
+<h3 style="color:#fff;font-size:1rem;margin-bottom:1rem">🏢 Smart Elevator Controller</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+<div>
+<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:#666;margin-bottom:0.5rem">Before — Fixed Schedule</div>
+<div class="term-before-wrap" style="background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:1rem;font-family:monospace;font-size:0.8rem;min-height:160px;color:#666;line-height:1.6"></div>
+</div>
+<div>
+<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:#00ff88;margin-bottom:0.5rem">After — KrillClaw Full</div>
+<div class="term-after-wrap" style="background:#0a0a0a;border:1px solid #00ff8833;border-radius:8px;padding:1rem;font-family:monospace;font-size:0.8rem;min-height:160px;color:#00ff88;line-height:1.6"></div>
+</div>
+</div>
+<div style="text-align:center;margin-top:0.5rem"><button class="term-replay" style="display:none;background:none;border:1px solid #333;color:#666;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:0.7rem">↻ Replay</button></div>
+</div>
+</div>
+
+<style>
+.term-line { white-space: pre-wrap; }
+.term-cmd { color: #fff; }
+.term-out { color: #666; }
+.term-agent { color: #00ff88; }
+.term-before .term-cmd { color: #888; }
+.term-cursor { animation: blink 1s step-end infinite; color: #00ff88; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (max-width: 700px) {
+  #demo-car > div:nth-child(2), #demo-elevator > div:nth-child(2) {
+    grid-template-columns: 1fr !important;
+  }
+}
+</style>
+<script src="assets/terminal-demo.js"></script>
 
 <div class="section">
 <h2><span class="mascot-inline" style="display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem">🦐</span>What becomes possible</h2>
