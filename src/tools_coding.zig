@@ -394,6 +394,43 @@ pub fn matchGlob(name: []const u8, pattern: []const u8) bool {
     return std.mem.eql(u8, name, pattern);
 }
 
+// ============================================================
+// Tests
+// ============================================================
+
+test "isPathAllowed rejects parent traversal" {
+    // Regression test: paths containing ".." must be rejected
+    try std.testing.expect(!isPathAllowed("../../etc/passwd"));
+    try std.testing.expect(!isPathAllowed("/tmp/../etc/passwd"));
+    try std.testing.expect(!isPathAllowed("foo/../../../etc/shadow"));
+}
+
+test "isPathAllowed rejects non-existent outside paths" {
+    // A path that doesn't exist and whose parent is outside the allowlist
+    try std.testing.expect(!isPathAllowed("/etc/nonexistent_file_12345"));
+}
+
+test "search enforces path allowlist" {
+    const alloc = std.heap.page_allocator;
+    // Attempting to search /etc should be blocked in sandbox or non-cwd paths
+    const result = executeSearch(alloc, "{\"pattern\":\"root\",\"path\":\"/etc\"}");
+    // Should either be blocked by allowlist or fail gracefully
+    // The key assertion: it must NOT return file contents from /etc/passwd
+    if (!result.is_error) {
+        try std.testing.expect(std.mem.indexOf(u8, result.output, "root:x:0:0") == null);
+    }
+}
+
+test "list_files enforces path allowlist" {
+    const alloc = std.heap.page_allocator;
+    // Attempting to list /etc should be blocked
+    const result = executeListFiles(alloc, "{\"path\":\"/etc\"}");
+    // Should either be blocked by allowlist or fail gracefully
+    if (!result.is_error) {
+        try std.testing.expect(std.mem.indexOf(u8, result.output, "passwd") == null);
+    }
+}
+
 fn executeApplyPatch(allocator: std.mem.Allocator, input: []const u8) ToolResult {
     const path = json.extractString(input, "path") orelse {
         return .{ .output = "Missing 'path' parameter", .is_error = true };

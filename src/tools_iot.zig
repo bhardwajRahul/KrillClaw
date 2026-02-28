@@ -20,12 +20,6 @@ pub const tool_definitions = [_]types.ToolDef{
     .{ .name = "http_request", .description = "Make an HTTP request (GET/POST/PUT/DELETE).", .input_schema =
         \\{"type":"object","properties":{"method":{"type":"string","enum":["GET","POST","PUT","DELETE"]},"url":{"type":"string"},"body":{"type":"string"},"headers":{"type":"object"}},"required":["method","url"]}
     },
-    .{ .name = "kv_get", .description = "Get a value from the key-value store.", .input_schema =
-        \\{"type":"object","properties":{"key":{"type":"string"}},"required":["key"]}
-    },
-    .{ .name = "kv_set", .description = "Set a value in the key-value store.", .input_schema =
-        \\{"type":"object","properties":{"key":{"type":"string"},"value":{"type":"string"}},"required":["key","value"]}
-    },
     .{ .name = "device_info", .description = "Get device information and status.", .input_schema =
         \\{"type":"object","properties":{},"required":[]}
     },
@@ -44,25 +38,13 @@ fn checkRateLimit() bool {
     return true;
 }
 
-/// Validate KV key: alphanumeric, dashes, underscores, dots only. No path traversal.
-fn isValidKvKey(key: []const u8) bool {
-    if (key.len == 0 or key.len > 128) return false;
-    if (std.mem.indexOf(u8, key, "..") != null) return false;
-    if (std.mem.indexOf(u8, key, "/") != null) return false;
-    for (key) |c| {
-        if (!std.ascii.isAlphanumeric(c) and c != '-' and c != '_' and c != '.') return false;
-    }
-    return true;
-}
-
 pub fn execute(allocator: std.mem.Allocator, tool: types.ToolUse) ToolResult {
     // Policy: no bash, no file writes
     if (std.mem.eql(u8, tool.name, "bash")) return .{ .output = "bash disabled in IoT profile", .is_error = true };
     if (std.mem.eql(u8, tool.name, "write_file")) return .{ .output = "write_file disabled in IoT profile", .is_error = true };
 
     // Pure Zig tools (no bridge needed)
-    if (std.mem.eql(u8, tool.name, "kv_get")) return executeKvGet(allocator, tool.input_raw);
-    if (std.mem.eql(u8, tool.name, "kv_set")) return executeKvSet(allocator, tool.input_raw);
+    // Note: kv_get/kv_set/kv_list/kv_delete + get_current_time handled by tools_shared.zig
     if (std.mem.eql(u8, tool.name, "device_info")) return executeDeviceInfo(allocator);
 
     // Bridge tools — rate limited
@@ -120,53 +102,6 @@ pub fn execute(allocator: std.mem.Allocator, tool: types.ToolUse) ToolResult {
     }
 
     return .{ .output = "Unknown tool", .is_error = true };
-}
-
-/// KV Get — read file from .krillclaw/kv/<key>
-fn executeKvGet(allocator: std.mem.Allocator, input: []const u8) ToolResult {
-    const key = json.extractString(input, "key") orelse
-        return .{ .output = "Missing 'key' parameter", .is_error = true };
-    if (!isValidKvKey(key)) return .{ .output = "Invalid key (alphanumeric, dash, underscore, dot only)", .is_error = true };
-
-    const path = std.fmt.allocPrint(allocator, ".krillclaw/kv/{s}", .{key}) catch
-        return .{ .output = "Path build error", .is_error = true };
-    const file = std.fs.cwd().openFile(path, .{}) catch
-        return .{ .output = "Key not found", .is_error = true };
-    defer file.close();
-    const content = file.readToEndAlloc(allocator, 1024 * 64) catch |err| {
-        const msg = std.fmt.allocPrint(allocator, "Read error: {}", .{err}) catch "read error";
-        return .{ .output = msg, .is_error = true };
-    };
-    return .{ .output = if (content.len == 0) "(empty)" else content, .is_error = false };
-}
-
-/// KV Set — write file to .krillclaw/kv/<key>
-fn executeKvSet(allocator: std.mem.Allocator, input: []const u8) ToolResult {
-    const key = json.extractString(input, "key") orelse
-        return .{ .output = "Missing 'key' parameter", .is_error = true };
-    const value = json.extractString(input, "value") orelse
-        return .{ .output = "Missing 'value' parameter", .is_error = true };
-    if (!isValidKvKey(key)) return .{ .output = "Invalid key (alphanumeric, dash, underscore, dot only)", .is_error = true };
-
-    std.fs.cwd().makePath(".krillclaw/kv") catch |err| {
-        const msg = std.fmt.allocPrint(allocator, "Cannot create KV dir: {}", .{err}) catch "dir error";
-        return .{ .output = msg, .is_error = true };
-    };
-
-    const path = std.fmt.allocPrint(allocator, ".krillclaw/kv/{s}", .{key}) catch
-        return .{ .output = "Path build error", .is_error = true };
-    const file = std.fs.cwd().createFile(path, .{}) catch |err| {
-        const msg = std.fmt.allocPrint(allocator, "Cannot create '{s}': {}", .{ path, err }) catch "create error";
-        return .{ .output = msg, .is_error = true };
-    };
-    defer file.close();
-    const unescaped = json.unescape(allocator, value) catch value;
-    file.writeAll(unescaped) catch |err| {
-        const msg = std.fmt.allocPrint(allocator, "Write error: {}", .{err}) catch "write error";
-        return .{ .output = msg, .is_error = true };
-    };
-    const msg = std.fmt.allocPrint(allocator, "Stored {d} bytes at key '{s}'", .{ unescaped.len, key }) catch "stored";
-    return .{ .output = msg, .is_error = false };
 }
 
 /// Device info — pure Zig, no bridge needed
