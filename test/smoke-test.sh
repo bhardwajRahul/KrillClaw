@@ -1,6 +1,6 @@
 #!/bin/bash
 # KrillClaw Comprehensive Smoke Test Suite
-# Usage: cd ~/TinyDancer && bash test/smoke-test.sh
+# Usage: cd ~/KrillClaw && bash test/smoke-test.sh
 set -o pipefail
 
 PASS=0
