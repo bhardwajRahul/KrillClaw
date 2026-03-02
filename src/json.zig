@@ -36,6 +36,10 @@ pub fn buildClaudeRequest(
         try writeEscaped(w, tool.description);
         try w.writeAll("\",\"input_schema\":");
         try w.writeAll(tool.input_schema);
+        if (tool.annotations.len > 2) { // skip empty "{}"
+            try w.writeAll(",\"annotations\":");
+            try w.writeAll(tool.annotations);
+        }
         try w.writeByte('}');
     }
 
@@ -114,7 +118,12 @@ pub fn buildOpenAiRequest(
         try writeEscaped(w, tool.description);
         try w.writeAll("\",\"parameters\":");
         try w.writeAll(tool.input_schema);
-        try w.writeAll("}}");
+        try w.writeByte('}');
+        if (tool.annotations.len > 2) {
+            try w.writeAll(",\"annotations\":");
+            try w.writeAll(tool.annotations);
+        }
+        try w.writeByte('}');
     }
 
     try w.writeAll("],\"messages\":[");

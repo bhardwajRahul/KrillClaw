@@ -8,6 +8,10 @@ __pycache__/
 bridge/venv/
 
 .reviews/
+ralph/
+
+# Test artifacts
+test_no_http
 
 # Claude Code project config
 .claude/

@@ -11,17 +11,33 @@ const std = @import("std");
 const types = @import("types.zig");
 const json = @import("json.zig");
 const build_options = @import("build_options");
+const power_mod = if (build_options.embedded) @import("power.zig") else struct {};
 
 pub const ToolResult = struct {
     output: []const u8,
     is_error: bool,
 };
 
-pub const tool_definitions = [_]types.ToolDef{
+/// Embedded-only tools (power budget, etc.)
+const embedded_tool_definitions = [_]types.ToolDef{
+    .{
+        .name = "power_budget",
+        .description = "Get power consumption stats and remaining battery estimate. Reports per-subsystem energy usage in microwatt-hours.",
+        .input_schema = \\{"type":"object","properties":{},"required":[]}
+        ,
+        .annotations = \\{"readOnly":true}
+        ,
+    },
+};
+
+/// Core tools available on all builds (including Lite/embedded)
+const core_tool_definitions = [_]types.ToolDef{
     .{
         .name = "get_current_time",
         .description = "Get the current date and time in ISO-8601 format.",
         .input_schema = \\{"type":"object","properties":{},"required":[]}
+        ,
+        .annotations = \\{"readOnly":true}
         ,
     },
     .{
@@ -29,11 +45,15 @@ pub const tool_definitions = [_]types.ToolDef{
         .description = "Get a value from the persistent key-value store.",
         .input_schema = \\{"type":"object","properties":{"key":{"type":"string","description":"Key to retrieve"}},"required":["key"]}
         ,
+        .annotations = \\{"readOnly":true}
+        ,
     },
     .{
         .name = "kv_set",
         .description = "Set a value in the persistent key-value store.",
         .input_schema = \\{"type":"object","properties":{"key":{"type":"string","description":"Key to store"},"value":{"type":"string","description":"Value to store"}},"required":["key","value"]}
+        ,
+        .annotations = \\{"sideEffects":["filesystem"]}
         ,
     },
     .{
@@ -41,17 +61,27 @@ pub const tool_definitions = [_]types.ToolDef{
         .description = "List all keys in the persistent key-value store.",
         .input_schema = \\{"type":"object","properties":{},"required":[]}
         ,
+        .annotations = \\{"readOnly":true}
+        ,
     },
     .{
         .name = "kv_delete",
         .description = "Delete a key from the persistent key-value store.",
         .input_schema = \\{"type":"object","properties":{"key":{"type":"string","description":"Key to delete"}},"required":["key"]}
         ,
+        .annotations = \\{"destructive":true,"sideEffects":["filesystem"]}
+        ,
     },
+};
+
+/// Bridge-delegated tools — only available on Full builds (require Python sidecar)
+const bridge_tool_definitions = [_]types.ToolDef{
     .{
         .name = "web_search",
         .description = "Search the web and return results. Uses DuckDuckGo (no API key needed).",
         .input_schema = \\{"type":"object","properties":{"query":{"type":"string","description":"Search query"},"max_results":{"type":"integer","description":"Max results (default 5)"}},"required":["query"]}
+        ,
+        .annotations = \\{"readOnly":true,"sideEffects":["network"]}
         ,
     },
     .{
@@ -59,11 +89,15 @@ pub const tool_definitions = [_]types.ToolDef{
         .description = "Save current conversation to persistent storage for later resumption.",
         .input_schema = \\{"type":"object","properties":{"session_id":{"type":"string","description":"Session identifier"},"messages":{"type":"string","description":"JSON-encoded message history"}},"required":["session_id","messages"]}
         ,
+        .annotations = \\{"sideEffects":["filesystem"]}
+        ,
     },
     .{
         .name = "session_load",
         .description = "Load a previously saved conversation session.",
         .input_schema = \\{"type":"object","properties":{"session_id":{"type":"string","description":"Session identifier to load"}},"required":["session_id"]}
+        ,
+        .annotations = \\{"readOnly":true}
         ,
     },
     .{
@@ -71,11 +105,15 @@ pub const tool_definitions = [_]types.ToolDef{
         .description = "List all saved conversation sessions.",
         .input_schema = \\{"type":"object","properties":{},"required":[]}
         ,
+        .annotations = \\{"readOnly":true}
+        ,
     },
     .{
         .name = "ota_check",
         .description = "Check for over-the-air updates from GitHub releases.",
         .input_schema = \\{"type":"object","properties":{"current_version":{"type":"string","description":"Current version string"}},"required":["current_version"]}
+        ,
+        .annotations = \\{"readOnly":true,"sideEffects":["network"]}
         ,
     },
     .{
@@ -83,8 +121,16 @@ pub const tool_definitions = [_]types.ToolDef{
         .description = "Download and apply an OTA update. Checks GitHub, downloads matching binary, verifies, and applies.",
         .input_schema = \\{"type":"object","properties":{"current_version":{"type":"string","description":"Current version"},"auto_apply":{"type":"boolean","description":"Auto-apply after download (default false)"}},"required":["current_version"]}
         ,
+        .annotations = \\{"destructive":true,"sideEffects":["network","filesystem"]}
+        ,
     },
 };
+
+/// Combined tool definitions: core + embedded-only on Lite, core + bridge on Full
+pub const tool_definitions = if (build_options.embedded)
+    core_tool_definitions ++ embedded_tool_definitions
+else
+    core_tool_definitions ++ bridge_tool_definitions;
 
 /// Try to execute a shared tool. Returns null if tool name doesn't match.
 pub fn tryExecute(allocator: std.mem.Allocator, tool: types.ToolUse) ?ToolResult {
@@ -95,13 +141,20 @@ pub fn tryExecute(allocator: std.mem.Allocator, tool: types.ToolUse) ?ToolResult
     if (std.mem.eql(u8, tool.name, "kv_list")) return executeKvList(allocator);
     if (std.mem.eql(u8, tool.name, "kv_delete")) return executeKvDelete(allocator, tool.input_raw);
 
-    // Bridge-delegated tools
-    if (std.mem.eql(u8, tool.name, "web_search")) return executeBridgeTool(allocator, "web_search", tool.input_raw);
-    if (std.mem.eql(u8, tool.name, "session_save")) return executeBridgeTool(allocator, "session_save", tool.input_raw);
-    if (std.mem.eql(u8, tool.name, "session_load")) return executeBridgeTool(allocator, "session_load", tool.input_raw);
-    if (std.mem.eql(u8, tool.name, "session_list")) return executeBridgeTool(allocator, "session_list", tool.input_raw);
-    if (std.mem.eql(u8, tool.name, "ota_check")) return executeOtaCheck(allocator, tool.input_raw);
-    if (std.mem.eql(u8, tool.name, "ota_update")) return executeOtaUpdate(allocator, tool.input_raw);
+    // Embedded-only tools
+    if (build_options.embedded) {
+        if (std.mem.eql(u8, tool.name, "power_budget")) return executePowerBudget(allocator);
+    }
+
+    // Bridge-delegated tools — not available on embedded (no Python sidecar)
+    if (!build_options.embedded) {
+        if (std.mem.eql(u8, tool.name, "web_search")) return executeBridgeTool(allocator, "web_search", tool.input_raw);
+        if (std.mem.eql(u8, tool.name, "session_save")) return executeBridgeTool(allocator, "session_save", tool.input_raw);
+        if (std.mem.eql(u8, tool.name, "session_load")) return executeBridgeTool(allocator, "session_load", tool.input_raw);
+        if (std.mem.eql(u8, tool.name, "session_list")) return executeBridgeTool(allocator, "session_list", tool.input_raw);
+        if (std.mem.eql(u8, tool.name, "ota_check")) return executeOtaCheck(allocator, tool.input_raw);
+        if (std.mem.eql(u8, tool.name, "ota_update")) return executeOtaUpdate(allocator, tool.input_raw);
+    }
     return null;
 }
 
@@ -307,6 +360,21 @@ fn executeOtaUpdate(allocator: std.mem.Allocator, input_raw: []const u8) ToolRes
 
     // Return the check result with update info — the agent can then decide to download
     return check_result;
+}
+
+// --- Power Budget (embedded only) ---
+
+/// Global power budget instance — shared across the embedded runtime.
+/// Initialized once, persists across agent runs.
+pub var global_power_budget: if (build_options.embedded) power_mod.PowerBudget else struct {} =
+    if (build_options.embedded) .{} else .{};
+
+fn executePowerBudget(allocator: std.mem.Allocator) ToolResult {
+    var buf: [512]u8 = undefined;
+    const n = global_power_budget.toJson(&buf);
+    if (n == 0) return .{ .output = "{}", .is_error = false };
+    const duped = allocator.dupe(u8, buf[0..n]) catch return .{ .output = "{}", .is_error = true };
+    return .{ .output = duped, .is_error = false };
 }
 
 // --- Tests ---

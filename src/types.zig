@@ -124,6 +124,7 @@ pub const ToolDef = struct {
     name: []const u8,
     description: []const u8,
     input_schema: []const u8,
+    annotations: []const u8 = "{}",
 };
 
 // Tool definitions moved to tools.zig (profile-selected at comptime)

@@ -219,3 +219,13 @@ def handle_mcp_list_tools(data):
     bridge, loop = _get_or_create_bridge()
     definitions = bridge.get_tool_definitions()
     return {"tools": definitions, "count": len(definitions)}
+
+
+def shutdown_mcp_bridge():
+    """Clean up the sync singleton bridge and event loop."""
+    global _mcp_bridge, _mcp_loop
+    if _mcp_bridge and _mcp_loop:
+        _mcp_loop.run_until_complete(_mcp_bridge.stop())
+        _mcp_loop.close()
+        _mcp_bridge = None
+        _mcp_loop = None

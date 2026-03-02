@@ -77,12 +77,12 @@
       var text = line.text;
       var i = 0;
       var speed = line.type === 'cmd' ? CMD_SPEED : OUT_SPEED;
+      var textNode = document.createTextNode('');
+      cursor.before(textNode);
 
       function typeChar() {
         if (i < text.length) {
-          // Insert char before cursor
-          cursor.before(document.createTextNode(text[i]));
-          i++;
+          textNode.data = text.substring(0, ++i);
           setTimeout(typeChar, speed);
         } else {
           currentLine++;

@@ -1035,10 +1035,6 @@ def load_channels_config() -> dict:
 async def serve_channels(bridge: "KrillClawBridge", channel_names: list[str], config: dict):
     """Start the multi-channel message router."""
     from channels import MessageRouter, IncomingMessage
-    from channels.telegram import TelegramChannel
-    from channels.mqtt import MqttChannel
-    from channels.webhook import WebhookChannel
-    from channels.websocket import WebSocketChannel
 
     # Start MCP bridge if configured
     mcp_bridge = None
@@ -1105,29 +1101,45 @@ async def serve_channels(bridge: "KrillClawBridge", channel_names: list[str], co
             webhook_port=config.get("whatsapp", {}).get("webhook_port", 8081),
         )
 
-    channel_registry = {
-        "telegram": lambda: TelegramChannel(
+    def _make_telegram():
+        from channels.telegram import TelegramChannel
+        return TelegramChannel(
             token=config.get("telegram", {}).get("token", os.environ.get("TELEGRAM_BOT_TOKEN", "")),
             allowed_users=config.get("telegram", {}).get("allowed_users"),
             poll_timeout=config.get("telegram", {}).get("poll_timeout", 30),
-        ),
-        "mqtt": lambda: MqttChannel(
+        )
+
+    def _make_mqtt():
+        from channels.mqtt import MqttChannel
+        return MqttChannel(
             broker=config.get("mqtt", {}).get("broker", "localhost"),
             port=config.get("mqtt", {}).get("port", 1883),
             subscribe_topic=config.get("mqtt", {}).get("subscribe_topic", "krillclaw/in"),
             publish_topic=config.get("mqtt", {}).get("publish_topic", "krillclaw/out"),
-        ),
-        "webhook": lambda: WebhookChannel(
+        )
+
+    def _make_webhook():
+        from channels.webhook import WebhookChannel
+        return WebhookChannel(
             host=config.get("webhook", {}).get("host", "0.0.0.0"),
             port=config.get("webhook", {}).get("port", 8080),
             auth_token=config.get("webhook", {}).get("auth_token"),
-        ),
-        "websocket": lambda: WebSocketChannel(
+        )
+
+    def _make_websocket():
+        from channels.websocket import WebSocketChannel
+        return WebSocketChannel(
             host=config.get("websocket", {}).get("host", "0.0.0.0"),
             port=config.get("websocket", {}).get("port", 8765),
             auth_token=config.get("websocket", {}).get("auth_token"),
             agent_binary=config.get("websocket", {}).get("agent_binary", "krillclaw"),
-        ),
+        )
+
+    channel_registry = {
+        "telegram": _make_telegram,
+        "mqtt": _make_mqtt,
+        "webhook": _make_webhook,
+        "websocket": _make_websocket,
         "discord": _make_discord,
         "slack": _make_slack,
         "whatsapp": _make_whatsapp,

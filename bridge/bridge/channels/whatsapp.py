@@ -43,7 +43,7 @@ class WhatsAppChannel(Channel):
             return
 
         self._on_message = on_message
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         handler_cls = partial(_WhatsAppHandler,
                               channel=self,
@@ -54,32 +54,42 @@ class WhatsAppChannel(Channel):
         # Run HTTP server in executor thread
         await loop.run_in_executor(None, self._server.serve_forever)
 
-    async def send(self, channel_id: str, text: str) -> None:
-        """Send a text message via WhatsApp Cloud API."""
-        import urllib.request
-        import urllib.error
+    def _get_conn(self):
+        """Get or create a persistent HTTPS connection to Graph API."""
+        import http.client
+        if not hasattr(self, "_conn") or self._conn is None:
+            self._conn = http.client.HTTPSConnection("graph.facebook.com")
+        return self._conn
 
-        url = f"{GRAPH_API}/{self._phone_number_id}/messages"
+    def _send_sync(self, channel_id, text):
+        """Synchronous send with connection reuse (runs in executor)."""
+        path = f"/v21.0/{self._phone_number_id}/messages"
         payload = json.dumps({
             "messaging_product": "whatsapp",
             "to": channel_id,
             "type": "text",
             "text": {"body": text},
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            url,
-            data=payload,
-            headers={
-                "Authorization": f"Bearer {self._access_token}",
-                "Content-Type": "application/json",
-            },
-        )
+        })
+        headers = {
+            "Authorization": f"Bearer {self._access_token}",
+            "Content-Type": "application/json",
+        }
         try:
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, urllib.request.urlopen, req)
-        except urllib.error.URLError as e:
-            logger.error("WhatsApp send failed: %s", e)
+            conn = self._get_conn()
+            conn.request("POST", path, payload, headers)
+            resp = conn.getresponse()
+            resp.read()  # drain response to allow reuse
+            if resp.status >= 400:
+                logger.error("WhatsApp send HTTP %d", resp.status)
+        except Exception:
+            self._conn = None  # reset on error
+            logger.exception("WhatsApp send failed")
+
+    async def send(self, channel_id: str, text: str) -> None:
+        """Send a text message via WhatsApp Cloud API."""
+        await asyncio.get_running_loop().run_in_executor(
+            None, self._send_sync, channel_id, text
+        )
 
     async def stop(self) -> None:
         if self._server:
@@ -95,8 +105,7 @@ class WhatsAppChannel(Channel):
             sender_id=sender_id,
             text=text,
         )
-        response = await self._on_message(msg)
-        await self.send(sender_id, response)
+        await self._on_message(msg)
 
 
 class _WhatsAppHandler(BaseHTTPRequestHandler):

@@ -32,9 +32,11 @@ pub fn build(b: *std.Build) void {
         .root_module = mod,
     });
 
-    // Size optimization: strip debug info and frame pointers
+    // Size optimization: strip debug info, frame pointers, unwind tables, thread safety
     exe.root_module.strip = true;
     exe.root_module.omit_frame_pointer = true;
+    exe.root_module.unwind_tables = .none;
+    exe.root_module.single_threaded = true;
 
     b.installArtifact(exe);
 

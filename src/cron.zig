@@ -30,6 +30,7 @@ pub const CronConfig = struct {
 };
 
 /// Scheduler state — tracks timing for cron and heartbeat.
+/// Supports adaptive backoff: interval doubles on idle ticks, resets on rule fires.
 pub const Scheduler = struct {
     config: CronConfig,
     last_cron: i64,
@@ -37,9 +38,18 @@ pub const Scheduler = struct {
     run_count: u32,
     start_time: i64,
     stdout: std.fs.File.DeprecatedWriter,
+    /// Current adaptive interval (may differ from config.interval_s)
+    current_interval: u32,
+    /// Minimum interval (= config.interval_s)
+    min_interval: u32,
+    /// Maximum interval (= config.interval_s * 16, capped at 1 hour)
+    max_interval: u32,
+    /// Number of idle ticks since last event
+    idle_ticks: u32 = 0,
 
     pub fn init(config: CronConfig) Scheduler {
         const now = std.time.timestamp();
+        const max_i = @min(config.interval_s * 16, 3600); // cap at 1 hour
         return .{
             .config = config,
             .last_cron = now,
@@ -47,17 +57,36 @@ pub const Scheduler = struct {
             .run_count = 0,
             .start_time = now,
             .stdout = std.fs.File.stdout().deprecatedWriter(),
+            .current_interval = config.interval_s,
+            .min_interval = config.interval_s,
+            .max_interval = if (config.interval_s > 0) max_i else 0,
         };
     }
 
+    /// Signal that something interesting happened (rule fired, user input, etc.)
+    /// Resets the adaptive backoff to minimum interval.
+    pub fn resetBackoff(self: *Scheduler) void {
+        self.current_interval = self.min_interval;
+        self.idle_ticks = 0;
+    }
+
+    /// Signal an idle tick — doubles the interval up to max.
+    pub fn backoff(self: *Scheduler) void {
+        self.idle_ticks += 1;
+        if (self.current_interval < self.max_interval) {
+            self.current_interval = @min(self.current_interval * 2, self.max_interval);
+        }
+    }
+
     /// Check if it's time for a cron agent run.
+    /// Uses current_interval (which may be backed off from config.interval_s).
     pub fn shouldRunAgent(self: *Scheduler) bool {
         if (self.config.interval_s == 0) return false;
         if (self.config.max_runs > 0 and self.run_count >= self.config.max_runs) return false;
 
         const now = std.time.timestamp();
         const elapsed: u64 = @intCast(now - self.last_cron);
-        if (elapsed >= self.config.interval_s) {
+        if (elapsed >= self.current_interval) {
             self.last_cron = now;
             self.run_count += 1;
             return true;
@@ -105,7 +134,7 @@ pub const Scheduler = struct {
 
         if (self.config.interval_s > 0) {
             const elapsed: u64 = @intCast(now - self.last_cron);
-            const remaining = if (elapsed >= self.config.interval_s) 0 else self.config.interval_s - @as(u32, @intCast(elapsed));
+            const remaining = if (elapsed >= self.current_interval) 0 else self.current_interval - @as(u32, @intCast(elapsed));
             min_wait = @min(min_wait, remaining);
         }
 
@@ -203,4 +232,64 @@ test "getCronPrompt returns configured prompt" {
     const config = CronConfig{ .prompt = "collect sensor data" };
     const sched = Scheduler.init(config);
     try std.testing.expectEqualStrings("collect sensor data", sched.getCronPrompt());
+}
+
+test "adaptive backoff doubles interval" {
+    const config = CronConfig{ .interval_s = 60 };
+    var sched = Scheduler.init(config);
+    try std.testing.expectEqual(@as(u32, 60), sched.current_interval);
+    sched.backoff();
+    try std.testing.expectEqual(@as(u32, 120), sched.current_interval);
+    sched.backoff();
+    try std.testing.expectEqual(@as(u32, 240), sched.current_interval);
+}
+
+test "adaptive backoff caps at max_interval" {
+    const config = CronConfig{ .interval_s = 60 };
+    var sched = Scheduler.init(config);
+    // max_interval = min(60*16, 3600) = 960
+    try std.testing.expectEqual(@as(u32, 960), sched.max_interval);
+    // Backoff until capped
+    var i: u32 = 0;
+    while (i < 10) : (i += 1) sched.backoff();
+    try std.testing.expectEqual(@as(u32, 960), sched.current_interval);
+}
+
+test "adaptive backoff resetBackoff restores min" {
+    const config = CronConfig{ .interval_s = 60 };
+    var sched = Scheduler.init(config);
+    sched.backoff();
+    sched.backoff();
+    try std.testing.expect(sched.current_interval > 60);
+    sched.resetBackoff();
+    try std.testing.expectEqual(@as(u32, 60), sched.current_interval);
+    try std.testing.expectEqual(@as(u32, 0), sched.idle_ticks);
+}
+
+test "backoff integration with shouldRunAgent" {
+    const config = CronConfig{ .interval_s = 1 };
+    var sched = Scheduler.init(config);
+    // Backoff to 2s
+    sched.backoff();
+    try std.testing.expectEqual(@as(u32, 2), sched.current_interval);
+
+    // Set last_cron 1.5s in the past — should NOT fire (interval is now 2s)
+    sched.last_cron = std.time.timestamp() - 1;
+    try std.testing.expect(!sched.shouldRunAgent());
+
+    // Set last_cron 3s in the past — should fire (elapsed > 2s interval)
+    sched.last_cron = std.time.timestamp() - 3;
+    try std.testing.expect(sched.shouldRunAgent());
+
+    // Reset backoff, set last_cron 1.5s ago — should fire again (interval back to 1s)
+    sched.resetBackoff();
+    sched.last_cron = std.time.timestamp() - 2;
+    try std.testing.expect(sched.shouldRunAgent());
+}
+
+test "adaptive backoff max capped at 1 hour" {
+    const config = CronConfig{ .interval_s = 300 }; // 5 min
+    const sched = Scheduler.init(config);
+    // 300*16 = 4800 > 3600, so max should be 3600
+    try std.testing.expectEqual(@as(u32, 3600), sched.max_interval);
 }

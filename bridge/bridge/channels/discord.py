@@ -27,7 +27,7 @@ class DiscordChannel(Channel):
         self._allowed_channels = set(allowed_channels) if allowed_channels else None
         self._client = None
 
-    async def start(self, on_message: MessageHandler) -> None:
+    async def start(self, on_message_cb: MessageHandler) -> None:
         try:
             import discord
         except ImportError:
@@ -44,28 +44,23 @@ class DiscordChannel(Channel):
             logger.info("Discord bot connected as %s", client.user)
 
         @client.event
-        async def on_message_event(message):
-            # Ignore own messages
+        async def on_message(message):
             if message.author == client.user:
                 return
 
-            # Guild allowlist
             if self._allowed_guilds and message.guild:
                 if str(message.guild.id) not in self._allowed_guilds:
                     return
 
-            # Channel allowlist
             if self._allowed_channels:
                 if str(message.channel.id) not in self._allowed_channels:
                     return
 
-            # Only respond to mentions or DMs
             is_dm = message.guild is None
             is_mention = client.user in message.mentions
             if not is_dm and not is_mention:
                 return
 
-            # Strip the mention from the text
             text = message.content
             if is_mention:
                 text = text.replace(f"<@{client.user.id}>", "").strip()
@@ -80,17 +75,7 @@ class DiscordChannel(Channel):
                 text=text,
             )
 
-            response = await on_message(msg)
-            # Discord has a 2000 char limit per message
-            if len(response) <= 2000:
-                await message.channel.send(response)
-            else:
-                # Split into chunks
-                for i in range(0, len(response), 2000):
-                    await message.channel.send(response[i:i+2000])
-
-        # Override the event name to avoid conflict with discord.py's on_message
-        client.event(on_message_event, name="on_message")
+            await on_message_cb(msg)
 
         if not self._token:
             logger.error("Discord bot token not configured")

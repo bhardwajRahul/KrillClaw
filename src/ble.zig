@@ -30,14 +30,10 @@ pub const BleTransport = struct {
     allocator: std.mem.Allocator,
     // On desktop: Unix socket for simulation
     socket: ?std.posix.socket_t = null,
-    // Response buffer
-    rx_buf: [4096]u8 = undefined,
+    // Response buffer — sized for LLM responses (can be 5-20KB)
+    rx_buf: [16384]u8 = undefined,
     rx_len: usize = 0,
     connected: bool = false,
-    // TODO: Implement chunk reassembly for multi-packet responses.
-    // Currently, only single-frame responses are supported. For large
-    // API responses over real BLE (>244 byte MTU), the bridge should
-    // reassemble chunks before sending over the socket.
 
     pub fn init(allocator: std.mem.Allocator) BleTransport {
         return .{

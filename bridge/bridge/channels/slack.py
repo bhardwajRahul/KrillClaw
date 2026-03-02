@@ -78,8 +78,7 @@ class SlackChannel(Channel):
             text=text,
         )
 
-        response = await self._on_message(msg)
-        await say(text=response, channel=channel_id)
+        await self._on_message(msg)
 
     async def send(self, channel_id: str, text: str) -> None:
         if not self._app:

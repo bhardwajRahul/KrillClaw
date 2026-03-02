@@ -25,7 +25,11 @@ pub fn execute(allocator: std.mem.Allocator, tool: types.ToolUse) ToolResult {
     // Profile-specific tools
     const profile_result = profile_mod.execute(allocator, tool);
     // If profile doesn't know the tool, try bridge (supports plugins)
+    // Bridge not available on embedded — no Python sidecar
     if (std.mem.eql(u8, profile_result.output, "Unknown tool")) {
+        if (build_options.embedded) {
+            return .{ .output = "Tool not available on Lite", .is_error = true };
+        }
         const bridge_result = shared.executeBridgeTool(allocator, tool.name, tool.input_raw);
         return .{ .output = bridge_result.output, .is_error = bridge_result.is_error };
     }

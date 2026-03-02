@@ -13,12 +13,18 @@ pub const ToolResult = struct {
 pub const tool_definitions = [_]types.ToolDef{
     .{ .name = "robot_cmd", .description = "Send a structured command to the robot (pose, velocity, or gripper).", .input_schema =
         \\{"type":"object","properties":{"cmd_type":{"type":"string","enum":["pose","velocity","gripper"]},"x":{"type":"number"},"y":{"type":"number"},"z":{"type":"number"},"vx":{"type":"number"},"vy":{"type":"number"},"vz":{"type":"number"},"grip":{"type":"number","minimum":0,"maximum":1}},"required":["cmd_type"]}
+    , .annotations =
+        \\{"destructive":true}
     },
     .{ .name = "estop", .description = "Emergency stop — immediately halt all robot motion.", .input_schema =
         \\{"type":"object","properties":{"reason":{"type":"string"}},"required":[]}
+    , .annotations =
+        \\{"destructive":true}
     },
     .{ .name = "telemetry_snapshot", .description = "Get current robot telemetry (position, velocity, sensors, status).", .input_schema =
         \\{"type":"object","properties":{},"required":[]}
+    , .annotations =
+        \\{"readOnly":true}
     },
 };
 

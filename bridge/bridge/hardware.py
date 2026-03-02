@@ -20,20 +20,22 @@ logger = logging.getLogger("krillclaw.hardware")
 _write_timestamps = {}
 MAX_WRITES_PER_SEC = 10
 
-# Pin allowlist from config
+# Config state (loaded lazily)
 _allowed_pins = None
+_gpio_chip = "gpiochip0"
 
 
 def _load_config():
     """Load hardware config from ~/.krillclaw/hardware.json."""
-    global _allowed_pins
+    global _allowed_pins, _gpio_chip
     config_path = os.path.expanduser("~/.krillclaw/hardware.json")
     if os.path.exists(config_path):
         try:
             with open(config_path, "r") as f:
                 cfg = json.load(f)
             _allowed_pins = set(cfg.get("allowed_pins", []))
-            logger.info("Hardware config loaded: %d allowed pins", len(_allowed_pins))
+            _gpio_chip = cfg.get("gpio_chip", "gpiochip0")
+            logger.info("Hardware config loaded: %d allowed pins, chip=%s", len(_allowed_pins), _gpio_chip)
         except Exception as e:
             logger.warning("Failed to load hardware config: %s", e)
 
@@ -78,7 +80,7 @@ def handle_gpio_read(data):
     if _is_linux():
         try:
             import gpiod
-            chip = gpiod.Chip("gpiochip0")
+            chip = gpiod.Chip(_gpio_chip)
             line = chip.get_line(pin)
             line.request(consumer="krillclaw", type=gpiod.LINE_REQ_DIR_IN)
             value = line.get_value()
@@ -110,7 +112,7 @@ def handle_gpio_write(data):
     if _is_linux():
         try:
             import gpiod
-            chip = gpiod.Chip("gpiochip0")
+            chip = gpiod.Chip(_gpio_chip)
             line = chip.get_line(pin)
             line.request(consumer="krillclaw", type=gpiod.LINE_REQ_DIR_OUT)
             line.set_value(int(value))
@@ -130,7 +132,7 @@ def handle_gpio_list(data):
     if _is_linux():
         try:
             import gpiod
-            chip = gpiod.Chip("gpiochip0")
+            chip = gpiod.Chip(_gpio_chip)
             pins = []
             for i in range(chip.num_lines):
                 line = chip.get_line(i)
@@ -140,7 +142,7 @@ def handle_gpio_list(data):
                     "consumer": line.consumer or "",
                     "direction": "in" if not line.is_used else "used",
                 })
-            return {"chip": "gpiochip0", "pins": pins}
+            return {"chip": _gpio_chip, "pins": pins}
         except ImportError:
             return {"error": "gpiod not installed. Run: pip install gpiod"}
         except Exception as e:

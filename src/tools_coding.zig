@@ -15,12 +15,18 @@ pub const tool_definitions = [_]types.ToolDef{
         .input_schema =
         \\{"type":"object","properties":{"command":{"type":"string","description":"The bash command to execute"}},"required":["command"]}
         ,
+        .annotations =
+        \\{"destructive":true,"sideEffects":["filesystem","network"]}
+        ,
     },
     .{
         .name = "read_file",
         .description = "Read the contents of a file at the given path.",
         .input_schema =
         \\{"type":"object","properties":{"path":{"type":"string","description":"Absolute path to the file to read"}},"required":["path"]}
+        ,
+        .annotations =
+        \\{"readOnly":true}
         ,
     },
     .{
@@ -29,12 +35,18 @@ pub const tool_definitions = [_]types.ToolDef{
         .input_schema =
         \\{"type":"object","properties":{"path":{"type":"string","description":"Absolute path to the file"},"content":{"type":"string","description":"Content to write"}},"required":["path","content"]}
         ,
+        .annotations =
+        \\{"destructive":true,"sideEffects":["filesystem"]}
+        ,
     },
     .{
         .name = "edit_file",
         .description = "Replace an exact string in a file with new content. The old_string must appear exactly once.",
         .input_schema =
         \\{"type":"object","properties":{"path":{"type":"string","description":"Absolute path to the file"},"old_string":{"type":"string","description":"Exact string to find and replace"},"new_string":{"type":"string","description":"Replacement string"}},"required":["path","old_string","new_string"]}
+        ,
+        .annotations =
+        \\{"destructive":true,"sideEffects":["filesystem"]}
         ,
     },
     .{
@@ -43,6 +55,9 @@ pub const tool_definitions = [_]types.ToolDef{
         .input_schema =
         \\{"type":"object","properties":{"pattern":{"type":"string","description":"Text pattern to search for (substring match)"},"path":{"type":"string","description":"Directory or file to search in (default: current directory)"}},"required":["pattern"]}
         ,
+        .annotations =
+        \\{"readOnly":true}
+        ,
     },
     .{
         .name = "list_files",
@@ -50,12 +65,18 @@ pub const tool_definitions = [_]types.ToolDef{
         .input_schema =
         \\{"type":"object","properties":{"path":{"type":"string","description":"Directory to list (default: current directory)"},"pattern":{"type":"string","description":"Glob pattern to filter files (e.g. *.zig)"}},"required":[]}
         ,
+        .annotations =
+        \\{"readOnly":true}
+        ,
     },
     .{
         .name = "apply_patch",
         .description = "Apply a unified diff patch to a file.",
         .input_schema =
         \\{"type":"object","properties":{"path":{"type":"string","description":"File to patch"},"patch":{"type":"string","description":"Unified diff content"}},"required":["path","patch"]}
+        ,
+        .annotations =
+        \\{"destructive":true,"sideEffects":["filesystem"]}
         ,
     },
 };

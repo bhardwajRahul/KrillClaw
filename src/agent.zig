@@ -1,6 +1,7 @@
 const std = @import("std");
+const build_options = @import("build_options");
 const types = @import("types.zig");
-const api = @import("api.zig");
+const api = if (build_options.embedded) @import("api_ble.zig") else @import("api.zig");
 const json = @import("json.zig");
 const react = @import("react.zig");
 const Context = @import("context.zig").Context;
@@ -212,4 +213,104 @@ pub const Agent = struct {
 fn printTextDelta(text: []const u8) void {
     const stdout = std.fs.File.stdout().deprecatedWriter();
     stdout.writeAll(text) catch {};
+}
+
+/// Multilingual stop phrases — EN, ES, FR, ZH, HI, AR, JA, DE, PT, RU
+/// Uses FNV-1a hash table for minimal binary footprint (~200 bytes vs ~800 for string table).
+/// Collision-free verified at comptime.
+pub fn isStopPhrase(input: []const u8) bool {
+    if (input.len == 0 or input.len > 20) return false;
+    const h = fnv1a(input);
+    for (stop_hashes) |sh| {
+        if (sh == h) return true;
+    }
+    return false;
+}
+
+fn fnv1a(s: []const u8) u64 {
+    var h: u64 = 0xcbf29ce484222325;
+    for (s) |b| {
+        h ^= b;
+        h *%= 0x100000001b3;
+    }
+    return h;
+}
+
+const stop_hashes = blk: {
+    const phrases = [_][]const u8{
+        // EN
+        "stop", "cancel", "quit", "exit",
+        // ES
+        "parar", "cancelar", "salir",
+        // FR
+        "arrêter", "annuler", "quitter",
+        // ZH / JA (停止 shared)
+        "停止", "取消", "退出", "中止", "終了",
+        // HI
+        "रुको", "रद्द", "बंद",
+        // AR
+        "توقف", "إلغاء", "خروج",
+        // DE
+        "stopp", "abbrechen", "beenden",
+        // PT (parar/cancelar shared with ES)
+        "sair",
+        // RU
+        "стоп", "отмена", "выход",
+    };
+    var hashes: [phrases.len]u64 = undefined;
+    for (phrases, 0..) |p, i| {
+        var h: u64 = 0xcbf29ce484222325;
+        for (p) |b| {
+            h ^= b;
+            h *%= 0x100000001b3;
+        }
+        // Verify no collisions
+        for (hashes[0..i]) |prev| {
+            if (prev == h) @compileError("FNV-1a collision in stop phrases");
+        }
+        hashes[i] = h;
+    }
+    break :blk hashes;
+};
+
+// --- Tests ---
+
+test "isStopPhrase English" {
+    try std.testing.expect(isStopPhrase("stop"));
+    try std.testing.expect(isStopPhrase("cancel"));
+    try std.testing.expect(isStopPhrase("quit"));
+    try std.testing.expect(isStopPhrase("exit"));
+}
+
+test "isStopPhrase multilingual" {
+    // ES
+    try std.testing.expect(isStopPhrase("parar"));
+    try std.testing.expect(isStopPhrase("salir"));
+    // FR
+    try std.testing.expect(isStopPhrase("quitter"));
+    // ZH
+    try std.testing.expect(isStopPhrase("停止"));
+    try std.testing.expect(isStopPhrase("退出"));
+    // JA
+    try std.testing.expect(isStopPhrase("中止"));
+    try std.testing.expect(isStopPhrase("終了"));
+    // DE
+    try std.testing.expect(isStopPhrase("stopp"));
+    try std.testing.expect(isStopPhrase("abbrechen"));
+    // RU
+    try std.testing.expect(isStopPhrase("стоп"));
+    try std.testing.expect(isStopPhrase("выход"));
+    // HI
+    try std.testing.expect(isStopPhrase("रुको"));
+    // AR
+    try std.testing.expect(isStopPhrase("توقف"));
+    // PT
+    try std.testing.expect(isStopPhrase("sair"));
+}
+
+test "isStopPhrase rejects non-stop input" {
+    try std.testing.expect(!isStopPhrase("hello"));
+    try std.testing.expect(!isStopPhrase("stopping"));
+    try std.testing.expect(!isStopPhrase(""));
+    try std.testing.expect(!isStopPhrase("STOP")); // case-sensitive
 }
